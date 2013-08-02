@@ -216,7 +216,7 @@ void RibbonApp::setup()
 	}
 	
 	this->updateSplinePatch();
-	bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+	bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
 	surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
 	surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
 	
@@ -404,7 +404,7 @@ void RibbonApp::update()
 	if (!mPause) {
 		this->updateSplinePatch();
 		
-		bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+		bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
 //		bsplineRect.setControlPointLatice(mCtrlPoints);	// does not work yet :(
 		if (mSurfaceMeshType == 0 && surfaceMesh) {
 			surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
@@ -479,10 +479,10 @@ void RibbonApp::draw()
 		glPointSize(5.0f);
 		gl::begin(GL_POINTS);
 		gl::color(1,1,1,1);
-		ControlPointLatice::index i,j;
+		uint32_t i,j;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
-				gl::vertex(mCtrlPoints[i][j]);
+				gl::vertex(mCtrlPoints[i + (j * mLaticeWidth)]);
 			}
 		}
 		gl::end();
@@ -537,8 +537,8 @@ void RibbonApp::updateSplinePatch()
 	// mLaticeLength =>	z axis
 	// TODO: Modify the weights above to smooth it out
 	if (mLoopV) {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		mCtrlPoints.resize(mLaticeWidth * mLaticeLength);
+		uint32_t i,j;
 		float x, y, z;
 		float r_x, radius, theta, t_x;
 		float two_pi = static_cast<float>(2.0 * M_PI);
@@ -561,15 +561,16 @@ void RibbonApp::updateSplinePatch()
 				y += math<float>::cos((weights[j]) + i + t * freqX) * aX;
 				y += math<float>::sin((t * freqZ) + (i * 0.75f));
 				z = hull_pt.x * scale_z;
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				mCtrlPoints[i + (j * mLaticeWidth)] = Vec3f(x,y,z);
+				//mCtrlPoints.push_back(Vec3f(x,y,z));
 				
 				theta += t_x;
 			}
 		}
 	}
 	else {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		mCtrlPoints.resize(mLaticeWidth * mLaticeLength);
+		uint32_t i,j;
 		float fX,fY,aX, x,y,z;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
@@ -581,7 +582,8 @@ void RibbonApp::updateSplinePatch()
 				y = scale_y * math<float>::cos((1.0f * weights[j]) + i + t * fX) * aX;
 				z = (j * scale_z) * (1.0f + math<float>::cos(i + t * freqY) * ampY);		//! position point-z
 				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;		//! add torsion-x to y
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				mCtrlPoints[i + (j * mLaticeWidth)] = Vec3f(x,y,z);
+				//mCtrlPoints.push_back(Vec3f(x,y,z));
 			}
 		}
 	}

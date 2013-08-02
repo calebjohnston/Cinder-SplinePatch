@@ -37,39 +37,40 @@ BSplinePatch::~BSplinePatch()
 {
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
+BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
 :	ParametricSurface(0, 1, 0, 1, true)
 {
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vOpen);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uOpen, vOpen);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
+BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
 :	ParametricSurface(0, 1, 0, 1, true)
 {
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vKnot);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uOpen, vKnot);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
+BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
 :	ParametricSurface(0, 1, 0, 1, true)
 {
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vOpen);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uKnot, vOpen);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
+BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
 :	ParametricSurface(0, 1, 0, 1, true)
 {
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vKnot);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uKnot, vKnot);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
+void BSplinePatch::create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	assert(numUCtrlPoints >= 2);
 	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -89,11 +90,11 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
+void BSplinePatch::create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize,
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	assert(numUCtrlPoints >= 2);
 	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -113,11 +114,11 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vKnot);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
+void BSplinePatch::create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	assert(numUCtrlPoints >= 2);
 	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -137,11 +138,11 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
+void BSplinePatch::create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, 
 	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	assert(numUCtrlPoints >= 2);
 	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -171,7 +172,7 @@ void BSplinePatch::createControls(const ControlPointLatice& ctrlPoints)
 //	if (uSize != mNumCtrlPoints[0] || vSize != mNumCtrlPoints[1]) {
 //		
 //	}
-	mControlPoints.resize(boost::extents[newNumUCtrlPoints][newNumVCtrlPoints]);
+	mControlPoints.resize(newNumUCtrlPoints * newNumVCtrlPoints);
 	if (newNumUCtrlPoints == mNumCtrlPoints[0] && newNumVCtrlPoints == mNumCtrlPoints[1]) {
 		mControlPoints = ControlPointLatice(ctrlPoints);
 	}
@@ -180,7 +181,7 @@ void BSplinePatch::createControls(const ControlPointLatice& ctrlPoints)
 			int uOld = u % mNumCtrlPoints[0];
 			for (size_t v = 0; v < newNumVCtrlPoints; ++v) {
 				int vOld = v % mNumCtrlPoints[1];
-				mControlPoints[u][v] = ctrlPoints[uOld][vOld];
+				mControlPoints[u + (newNumUCtrlPoints * v)] = ctrlPoints[uOld + (mNumCtrlPoints[0] * vOld)];
 			}
 		}
 	}
@@ -190,7 +191,7 @@ void BSplinePatch::setControlPoint(const uint32_t uIndex, const uint32_t vIndex,
 {
     if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
         // Set the control point.
-		mControlPoints[uIndex][vIndex] = point;
+		mControlPoints[uIndex + (mNumCtrlPoints[0] * vIndex)] = point;
 
         // Set the replicated control point.
         bool doUReplicate = (uIndex < mReplicate[0]);
@@ -199,16 +200,16 @@ void BSplinePatch::setControlPoint(const uint32_t uIndex, const uint32_t vIndex,
 
         if (doUReplicate){
             iUExt = mNumCtrlPoints[0] + uIndex;
-            mControlPoints[iUExt][vIndex] = point;
+            mControlPoints[iUExt + (mNumCtrlPoints[0] * vIndex)] = point;
         }
 		
         if (doVReplicate) {
             iVExt = mNumCtrlPoints[1] + vIndex;
-            mControlPoints[uIndex][iVExt] = point;
+            mControlPoints[uIndex + (mNumCtrlPoints[0] * iVExt)] = point;
         }
 		
         if (doUReplicate && doVReplicate) {
-            mControlPoints[iUExt][iVExt] = point;
+            mControlPoints[iUExt + (mNumCtrlPoints[0] * iVExt)] = point;
         }
     }
 }
@@ -216,7 +217,7 @@ void BSplinePatch::setControlPoint(const uint32_t uIndex, const uint32_t vIndex,
 Vec3f BSplinePatch::getControlPoint(const uint32_t uIndex, const uint32_t vIndex) const
 {
     if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
-        return mControlPoints[uIndex][vIndex];
+        return mControlPoints[uIndex + (mNumCtrlPoints[0] * vIndex)];
     }
 
     return Vec3f::max();
@@ -224,8 +225,11 @@ Vec3f BSplinePatch::getControlPoint(const uint32_t uIndex, const uint32_t vIndex
 
 void BSplinePatch::setControlPointLatice(const ControlPointLatice& ctrlPoints)
 {
+	/*
+	// TODO: remove asserts, determine how to handle reallocation
 	assert(ctrlPoints.shape()[0] == mNumCtrlPoints[0]);
 	assert(ctrlPoints.shape()[1] == mNumCtrlPoints[1]);
+	 */
 	
 	createControls(ctrlPoints);
 }
@@ -290,12 +294,14 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
 
     float tmp;
 
+	int idiff = iumax - iumin;
     if (pos) {
         *pos = Vec3f::zero();
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD0(iv);
-                *pos += tmp * mControlPoints[iu][iv];
+                //*pos += tmp * mControlPoints[iu][iv];
+				*pos += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }
@@ -305,7 +311,8 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD0(iv);
-                *derU += tmp * mControlPoints[iu][iv];
+                //*derU += tmp * mControlPoints[iu][iv];
+				*derU += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }
@@ -315,7 +322,8 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD1(iv);
-                *derV += tmp * mControlPoints[iu][iv];
+                //*derV += tmp * mControlPoints[iu][iv];
+				*derV += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }
@@ -325,7 +333,8 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD2(iu)*mBasis[1].getD0(iv);
-                *derUU += tmp * mControlPoints[iu][iv];
+                //*derUU += tmp * mControlPoints[iu][iv];
+				*derUU += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }
@@ -335,7 +344,8 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD1(iv);
-                *derUV += tmp * mControlPoints[iu][iv];
+                //*derUV += tmp * mControlPoints[iu][iv];
+				*derUV += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }
@@ -345,7 +355,8 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD2(iv);
-                *derVV += tmp * mControlPoints[iu][iv];
+                //*derVV += tmp * mControlPoints[iu][iv];
+				*derVV += tmp * mControlPoints[iu + (idiff * iv)];
             }
         }
     }

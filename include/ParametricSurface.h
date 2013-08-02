@@ -1,15 +1,11 @@
 #pragma once
 
-#include <boost/multi_array.hpp>
-
 #include "cinder/Vector.h"
 
 namespace cg {
 	
-//! rectangular 2D grid of weights applied to a NURBS patch
-typedef boost::multi_array<float, 2> PointWeightLatice;
 //! rectangular 2D grid of 3D points which define a patch of splines
-typedef boost::multi_array<ci::Vec3f, 2> ControlPointLatice;
+typedef std::vector<ci::Vec3f> ControlPointLatice;
 
 /** 
  * @brief A surface defined by functions that are second order differentiable on two dimensions

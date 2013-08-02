@@ -31,19 +31,19 @@ public:
 	// constructors below represent these choices.
 	
 	// (OU,OU), (OU,PU), (PU,OU), or (PU,PU)
-	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				 const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen);
 	
 	// (OU,ON) or (PU,ON)
-	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				 const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot);
 	
 	// (ON,OU) or (ON,PU)
-	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				 const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen);
 	
 	// (ON,ON)
-	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	BSplinePatch(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				 const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot);
 	
 	virtual ~BSplinePatch();
@@ -110,16 +110,16 @@ public:
 	void get(float u, float v, ci::Vec3f* pos, ci::Vec3f* derU, ci::Vec3f* derV, 
 			 ci::Vec3f* derUU, ci::Vec3f* derUV, ci::Vec3f* derVV) const;
 	
-	void create(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	void create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen);
 	
-	void create(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	void create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot);
 	
-	void create(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	void create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen);
 	
-	void create(const ControlPointLatice& ctrlPoints, const uint32_t uDegree,
+	void create(const ControlPointLatice& ctrlPoints, const uint32_t uSize, const uint32_t vSize, const uint32_t uDegree,
 				const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot);
 	
 protected:	

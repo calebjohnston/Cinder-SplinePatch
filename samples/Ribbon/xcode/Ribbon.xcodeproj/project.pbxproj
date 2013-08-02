@@ -14,7 +14,6 @@
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
 		3CAF5760B5E049F9A912CB15 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4E20FCF86A714235AE15D580 /* CinderApp.icns */; };
 		4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90717AAC57E00832470 /* BSplinePatch.cpp */; };
-		4165C90D17AAC57E00832470 /* NurbsPatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90817AAC57E00832470 /* NurbsPatch.cpp */; };
 		4165C90E17AAC57E00832470 /* ParametricSurface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90917AAC57E00832470 /* ParametricSurface.cpp */; };
 		4165C90F17AAC57E00832470 /* SurfaceTriMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */; };
 		4165C91017AAC57E00832470 /* SurfaceVboMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */; };
@@ -35,12 +34,10 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		4165C90717AAC57E00832470 /* BSplinePatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSplinePatch.cpp; path = ../../../src/BSplinePatch.cpp; sourceTree = "<group>"; };
-		4165C90817AAC57E00832470 /* NurbsPatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NurbsPatch.cpp; path = ../../../src/NurbsPatch.cpp; sourceTree = "<group>"; };
 		4165C90917AAC57E00832470 /* ParametricSurface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParametricSurface.cpp; path = ../../../src/ParametricSurface.cpp; sourceTree = "<group>"; };
 		4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SurfaceTriMesh.cpp; path = ../../../src/SurfaceTriMesh.cpp; sourceTree = "<group>"; };
 		4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SurfaceVboMesh.cpp; path = ../../../src/SurfaceVboMesh.cpp; sourceTree = "<group>"; };
 		4165C91217AAC59500832470 /* BSplinePatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSplinePatch.h; path = ../../../include/BSplinePatch.h; sourceTree = "<group>"; };
-		4165C91317AAC59500832470 /* NurbsPatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NurbsPatch.h; path = ../../../include/NurbsPatch.h; sourceTree = "<group>"; };
 		4165C91417AAC59500832470 /* ParametricSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ParametricSurface.h; path = ../../../include/ParametricSurface.h; sourceTree = "<group>"; };
 		4165C91517AAC59500832470 /* SurfaceTriMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SurfaceTriMesh.h; path = ../../../include/SurfaceTriMesh.h; sourceTree = "<group>"; };
 		4165C91617AAC59500832470 /* SurfaceVboMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SurfaceVboMesh.h; path = ../../../include/SurfaceVboMesh.h; sourceTree = "<group>"; };
@@ -164,7 +161,6 @@
 			isa = PBXGroup;
 			children = (
 				4165C90717AAC57E00832470 /* BSplinePatch.cpp */,
-				4165C90817AAC57E00832470 /* NurbsPatch.cpp */,
 				4165C90917AAC57E00832470 /* ParametricSurface.cpp */,
 				4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */,
 				4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */,
@@ -185,7 +181,6 @@
 			isa = PBXGroup;
 			children = (
 				4165C91217AAC59500832470 /* BSplinePatch.h */,
-				4165C91317AAC59500832470 /* NurbsPatch.h */,
 				4165C91417AAC59500832470 /* ParametricSurface.h */,
 				4165C91517AAC59500832470 /* SurfaceTriMesh.h */,
 				4165C91617AAC59500832470 /* SurfaceVboMesh.h */,
@@ -256,7 +251,6 @@
 			files = (
 				AEBCFF89618E4D0CB0CEBD49 /* RibbonApp.cpp in Sources */,
 				4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */,
-				4165C90D17AAC57E00832470 /* NurbsPatch.cpp in Sources */,
 				4165C90E17AAC57E00832470 /* ParametricSurface.cpp in Sources */,
 				4165C90F17AAC57E00832470 /* SurfaceTriMesh.cpp in Sources */,
 				4165C91017AAC57E00832470 /* SurfaceVboMesh.cpp in Sources */,
