@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cinder>
+<block
+	name="BSlinePatch"
+	id="org.libcinder.bspline-patch"
+	author="Caleb Johnston"
+	git="git@github.com:calebjohnston/Cinder-SplinePatch.git"
+	summary="BSpline patch support using VBOs and Cinder Triangle mesh"
+	version="1.0.0">
+	<supports os="msw" />
+	<supports os="macosx" />
+	<includePath>include</includePath>
+	<sourcePattern>src/*.cpp</sourcePattern>
+	<headerPattern>src/*.h</headerPattern>
+	<!-- <platform os="macosx"></platform> -->
+	<!-- <platform os="msw"></platform> -->
+</block>
+</cinder>
