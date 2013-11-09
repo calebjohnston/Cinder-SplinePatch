@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Source Files\splines">
+      <UniqueIdentifier>{0d5b4107-0809-4ada-9aae-b593beac1a95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\splines">
+      <UniqueIdentifier>{39e8f9df-5e6a-4d68-902e-2fb940dc8327}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\RibbonApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\BSplinePatch.cpp">
+      <Filter>Source Files\splines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\NurbsPatch.cpp">
+      <Filter>Source Files\splines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ParametricSurface.cpp">
+      <Filter>Source Files\splines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\SurfaceTriMesh.cpp">
+      <Filter>Source Files\splines</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\SurfaceVboMesh.cpp">
+      <Filter>Source Files\splines</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Resources.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\BSplinePatch.h">
+      <Filter>Header Files\splines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\NurbsPatch.h">
+      <Filter>Header Files\splines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\ParametricSurface.h">
+      <Filter>Header Files\splines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SurfaceTriMesh.h">
+      <Filter>Header Files\splines</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\SurfaceVboMesh.h">
+      <Filter>Header Files\splines</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

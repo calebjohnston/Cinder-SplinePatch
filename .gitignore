@@ -2,3 +2,6 @@ build
 xcuserdata
 project.xcworkspace
 .DS_Store
+Release
+Debug
+Ribbon.sdf
