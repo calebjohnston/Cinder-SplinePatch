@@ -74,6 +74,7 @@ public:
 private:
 	void drawWorldFrame();
 	void updateSplinePatch();
+	void generateKnots( std::vector<float>& knots, const size_t count );
 	
 	CameraOrtho				mStaticCam;
 	CameraPersp				mCam;
@@ -81,16 +82,16 @@ private:
 	ivec2					mMousePos;
 	
 	float					mFps;
-	bool						mDrawBezierPatch;
-	bool						mDrawWireframe;
-	bool						mDrawParams;
-	bool						mEnableBackfaceCulling;
-	bool						mEnableAdditiveBlending;
-	bool						mPause;
-	bool						mLoopU;
-	bool						mLoopV;
-	bool						mOpenU;
-	bool						mOpenV;
+	bool					mDrawBezierPatch;
+	bool					mDrawWireframe;
+	bool					mDrawParams;
+	bool					mEnableBackfaceCulling;
+	bool					mEnableAdditiveBlending;
+	bool					mPause;
+	bool					mLoopU;
+	bool					mLoopV;
+	bool					mOpenU;
+	bool					mOpenV;
 	float					mKnotU;
 	float					mKnotV;
 	float					mRadiusMin;
@@ -135,8 +136,13 @@ private:
 	bool mIsReady;
 	BSplinePatch bsplineRect;
 	std::vector<ci::vec3> mCtrlPoints;
+	std::vector<float> mCtrlKnotsV;
 	ci::gl::VboMeshRef mMesh;
 	ci::gl::GlslProgRef mShader;
+	
+	float					mKnot0;
+	float					mKnot1;
+	float					mKnot2;
 };
 
 void RibbonApp::prepareSettings( Settings *settings )
@@ -209,7 +215,9 @@ void RibbonApp::setup()
 	mStaticCam_bottom = -8.0f;
 	mLightPosition = vec3(1);
 	
-	glm::bvec2 mMyPersonalBoolVector;
+	mKnot0 = 0.13 * 100;
+	mKnot1 = 0.45 * 100;
+	mKnot2 = 0.66 * 100;
 	
 	try {
 		mShader = gl::GlslProg::create(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
@@ -222,12 +230,14 @@ void RibbonApp::setup()
 	}
 	
 	this->updateSplinePatch();
-	bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+	this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
+	bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
+	//bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV);
 	//
 	//surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
 	//surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
 	//
-	BSplineSurface surfaceMesh = BSplineSurface(bsplineRect).subdivisions( ivec2( mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	BSplineSurface surfaceMesh = BSplineSurface(bsplineRect, ivec2(mMeshWidth, mMeshLength)).texCoords( vec2(0,0), vec2(1,1) );
 	TriMeshRef surface = TriMesh::create( surfaceMesh );
 	mMesh = gl::VboMesh::create( *surface.get() );
 	
@@ -258,6 +268,9 @@ void RibbonApp::setup()
 	mParams->addParam("use additive blending", &mEnableAdditiveBlending);
 	mParams->addParam("pause", &mPause);
 	//	mParams->addParam("total hull edges", &mHullEdges);
+	mParams->addParam("knot 0", &mKnot0);
+	mParams->addParam("knot 1", &mKnot1);
+	mParams->addParam("knot 2", &mKnot2);
 	mParams->addParam("latice width", &mLaticeWidth);
 	mParams->addParam("latice length", &mLaticeLength);
 	mParams->addParam("mesh width", &mMeshWidth);
@@ -411,13 +424,15 @@ void RibbonApp::update()
 	
 	if (!mPause) {
 		this->updateSplinePatch();
-		
-		bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
-		BSplineSurface surfaceMesh = BSplineSurface( bsplineRect, ivec2( mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
-		TriMeshRef surface = TriMesh::create( surfaceMesh );
-		//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
-		mMesh = gl::VboMesh::create( *surface.get() );
+		this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
 	}
+	
+	//bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV);
+	bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
+	BSplineSurface surfaceMesh = BSplineSurface( bsplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	TriMeshRef surface = TriMesh::create( surfaceMesh );
+	//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
+	mMesh = gl::VboMesh::create( *surface.get() );
 	
 	if (mCameraIndex == 1) {
 		mStaticCam.setEyePoint(mStaticCam_position);
@@ -453,7 +468,6 @@ void RibbonApp::draw()
 	
 	if (mDrawWireframe) gl::enableWireframe();
 	else if (mShader) {
-		gl::color(1,1,1,1);
 //		mShader->bind();
 //		mShader->uniform("lightPosition", vec4(mLightPosition,1.0f));
 //		mShader->uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
@@ -463,6 +477,7 @@ void RibbonApp::draw()
 //		mShader->uniform("specularColor", mSpecularColor);
 	}
 	
+	gl::color(1,1,1,1);
 	gl::draw( mMesh );
 	
 	gl::disableWireframe();
@@ -476,8 +491,7 @@ void RibbonApp::draw()
 	if (mDrawBezierPatch) {
 		glPointSize(5.0f);
 		gl::begin(GL_POINTS);
-		gl::color(1,1,1,1);
-		//ControlPointLatice::index i,j;
+		gl::color(0,1,1,1);
 		uint32_t i,j;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
@@ -540,8 +554,6 @@ void RibbonApp::updateSplinePatch()
 	if (mCtrlPoints.size() != meshSize) mCtrlPoints.resize( meshSize );
 	
 	if (mLoopV) {
-		//mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		//ControlPointLatice::index i,j;
 		uint32_t i,j;
 		float x, y, z;
 		float r_x, radius, theta, t_x;
@@ -572,8 +584,6 @@ void RibbonApp::updateSplinePatch()
 		}
 	}
 	else {
-		//mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		//ControlPointLatice::index i,j;
 		uint32_t i,j;
 		float fX,fY,aX, x,y,z;
 		for(i = 0; i != mLaticeWidth; ++i) {
@@ -588,6 +598,26 @@ void RibbonApp::updateSplinePatch()
 				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;		//! add torsion-x to y
 				mCtrlPoints[i * mLaticeLength + j] = vec3(x,y,z);
 			}
+		}
+	}
+}
+
+void RibbonApp::generateKnots( std::vector<float>& knots, const size_t count )
+{
+	knots.clear();
+	knots.resize(count);
+	float tmp = 0.0f;
+	float delta = 1.1f / static_cast<float>(count);
+	for (uint32_t i = 0; i < knots.size(); i++) {
+		knots[i] = tmp + (i * delta);
+		if (7 == i) {
+			knots[i] = mKnot2 / 100;
+		}
+		else if (5 == i) {
+			knots[i] = mKnot1 / 100;
+		}
+		else if (3 == i) {
+			knots[i] = mKnot0 / 100;
 		}
 	}
 }

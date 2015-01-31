@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "cinder/BSpline.h"
+#include "cinder/CinderGlm.h"
 #include "cinder/Vector.h"
 
 /**
@@ -29,27 +30,23 @@ public:
 	
 	// (OU,OU), (OU,PU), (PU,OU), or (PU,PU)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
-				 const uint32_t uSize, const uint32_t vSize,
-				 const uint32_t uDegree, const uint32_t vDegree,
-				 bool uLoop, bool vLoop, bool uOpen, bool vOpen);
+				 const ci::ivec2& size, const ci::ivec2& degree,
+				 const glm::bvec2& loop, bool uOpen, bool vOpen);
 	
 	// (OU,ON) or (PU,ON)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
-				 const uint32_t uSize, const uint32_t vSize,
-				 const uint32_t uDegree, const uint32_t vDegree,
-				 bool uLoop, bool vLoop, bool uOpen, float* vKnot);
+				 const ci::ivec2& size, const ci::ivec2& degree,
+				 const glm::bvec2& loop, bool uOpen, const std::vector<float>& vKnots);
 	
 	// (ON,OU) or (ON,PU)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
-				 const uint32_t uSize, const uint32_t vSize,
-				 const uint32_t uDegree, const uint32_t vDegree,
-				 bool uLoop, bool vLoop, float* uKnot, bool vOpen);
+				 const ci::ivec2& size, const ci::ivec2& degree,
+				 const glm::bvec2& loop, const std::vector<float>& uKnots, bool vOpen);
 	
 	// (ON,ON)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
-				 const uint32_t uSize, const uint32_t vSize,
-				 const uint32_t uDegree, const uint32_t vDegree,
-				 bool uLoop, bool vLoop, float* uKnot, float* vKnot);
+				 const ci::ivec2& size, const ci::ivec2& degree,
+				 const glm::bvec2& loop, const std::vector<float>& uKnots, const std::vector<float>& vKnots);
 	
 	virtual ~BSplinePatch();
 	
@@ -62,12 +59,11 @@ public:
 
 	// Control points may be changed at any time. If either input index is
 	// invalid, GetControlPoint returns a vector whose components are all MAX_REAL.
-	void setControlPoint(const uint32_t uIndex, const uint32_t vIndex, const ci::vec3& point);
-	ci::vec3 getControlPoint(const uint32_t uIndex, const uint32_t vIndex) const;
+	void setControlPoint(const ci::ivec2& index, const ci::vec3& point);
+	ci::vec3 getControlPoint(const ci::ivec2& index) const;
 		
 	/** */
-	void updateControlPoints(const std::vector<ci::vec3>& ctrlPoints,
-						  const uint32_t uSize, const uint32_t vSize);
+	void updateControlPoints(const std::vector<ci::vec3>& ctrlPoints, const ci::ivec2& size);
 	/** */
 	std::vector<ci::vec3>& getControlPoints() { return mControlPoints; }
 
@@ -103,8 +99,8 @@ public:
 	inline float getVMin() const { return mDomainMin.t; }
 	inline float getVMax() const { return mDomainMax.t; }
 	
-	ci::vec3 tangent0(float u, float v) const;
-	ci::vec3 tangent1(float u, float v) const;
+	ci::vec3 tangent0(float u, float v) const;	// rename to tangent()
+	ci::vec3 tangent1(float u, float v) const;	// rename to bitangent()
 	ci::vec3 position(float u, float v) const;
 	ci::vec3 normal(float u, float v) const;
 	
@@ -145,25 +141,8 @@ public:
 	void get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV, 
 			 ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
 	
-	void create(const std::vector<ci::vec3>& ctrlPoints,
-				const uint32_t uSize, const uint32_t vSize,
-				const uint32_t uDegree, const uint32_t vDegree,
-				bool uLoop, bool vLoop, bool uOpen, bool vOpen);
-	
-	void create(const std::vector<ci::vec3>& ctrlPoints,
-				const uint32_t uSize, const uint32_t vSize,
-				const uint32_t uDegree, const uint32_t vDegree,
-				bool uLoop, bool vLoop, bool uOpen, float* vKnot);
-	
-	void create(const std::vector<ci::vec3>& ctrlPoints,
-				const uint32_t uSize, const uint32_t vSize,
-				const uint32_t uDegree, const uint32_t vDegree,
-				bool uLoop, bool vLoop, float* uKnot, bool vOpen);
-	
-	void create(const std::vector<ci::vec3>& ctrlPoints,
-				const uint32_t uSize, const uint32_t vSize,
-				const uint32_t uDegree, const uint32_t vDegree,
-				bool uLoop, bool vLoop, float* uKnot, float* vKnot);
+	// Access the basis function to compute it without control points.
+	ci::BSplineBasis& getBasis( const uint8_t dim ) { return mBasis[dim]; }
 	
 protected:	
 	// Replicate the necessary number of control points when the create
@@ -171,13 +150,12 @@ protected:
 	// must be a closed surface in the corresponding dimension.
 	void createControls(const std::vector<ci::vec3>& ctrlPoints);
 	
-//	float mUMin, mUMax, mVMin, mVMax;
 	ci::vec2 mDomainMin;
 	ci::vec2 mDomainMax;
 	
+	glm::bvec2 mLoop;						//!< Stores whether or not the basis function loops in either dimension
 	ci::ivec2 mReplicate;					//!< Stores whether or not the points are replicated in either dimension
 	ci::ivec2 mNumCtrlPoints;				//!< A count of the total number of control points in either dimension
-	std::array<bool,2> mLoop;				//!< Stores whether or not the basis function loops in either dimension
 	std::array<ci::BSplineBasis,2> mBasis;	//!< Basis function used in either dimension
 	std::vector<ci::vec3> mControlPoints;	//!< Rectangular latice of control points used with the spline basis functions
 

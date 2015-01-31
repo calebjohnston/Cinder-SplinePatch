@@ -17,7 +17,7 @@ using namespace ci;
 using namespace ci::geom;
 
 BSplineSurface::BSplineSurface(const BSplinePatch& patch, const ivec2& subdivisions )
-:	mPatch( patch )
+:	Source(), mPatch( patch )
 {
 	init( subdivisions );
 }
