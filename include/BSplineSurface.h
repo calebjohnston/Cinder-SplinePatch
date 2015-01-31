@@ -21,8 +21,7 @@
  * The updateSurface method and constructor will generate triangle
  * indices, vertices, normals, and texture coordinates.
  *
- * @see cg::SurfaceVboMesh
- * @see cg::BSplinePatch
+ * @see BSplinePatch
  */
 class BSplineSurface : public ci::geom::Source {
 public:

@@ -10,6 +10,7 @@
 #include "cinder/Rand.h"
 #include "cinder/GeomIo.h"
 #include "cinder/ImageIo.h"
+#include "cinder/CinderGlm.h"
 #include "cinder/Utilities.h"
 #include "cinder/System.h"
 #include "cinder/TriMesh.h"
@@ -20,8 +21,7 @@
 #include "cinder/AxisAlignedBox.h"
 
 #include "BSplinePatch.h"
-#include "SurfaceTriMesh.h"
-// #include "SurfaceVboMesh.h"
+#include "BSplineSurface.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -122,7 +122,6 @@ private:
 	Color					mDiffuseColor;
 	Color					mSpecularColor;
 	ColorA					mClearColor;
-	int32_t					mSurfaceMeshType;
 	int32_t					mLaticeWidth;
 	int32_t					mLaticeLength;
 	int32_t					mMeshWidth;
@@ -135,9 +134,7 @@ private:
 
 	bool mIsReady;
 	BSplinePatch bsplineRect;
-	//BSplineSurface surfaceMesh;
-	//cg::SurfaceVboMesh surfaceVbo;
-	ControlPointLatice mCtrlPoints;
+	std::vector<ci::vec3> mCtrlPoints;
 	ci::gl::VboMeshRef mMesh;
 	ci::gl::GlslProgRef mShader;
 };
@@ -165,7 +162,6 @@ void RibbonApp::setup()
 	this->getWindow()->getSignalResize().connect(std::bind(&RibbonApp::resize, this));
 	
 	mFps = 0.0;
-	mSurfaceMeshType = 0;
 	mEnableBackfaceCulling = false;
 	mEnableAdditiveBlending = true;
 	mDrawBezierPatch = false;
@@ -213,6 +209,8 @@ void RibbonApp::setup()
 	mStaticCam_bottom = -8.0f;
 	mLightPosition = vec3(1);
 	
+	glm::bvec2 mMyPersonalBoolVector;
+	
 	try {
 		mShader = gl::GlslProg::create(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
 	}
@@ -224,7 +222,7 @@ void RibbonApp::setup()
 	}
 	
 	this->updateSplinePatch();
-	bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+	bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
 	//
 	//surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
 	//surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
@@ -249,10 +247,7 @@ void RibbonApp::setup()
 	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
 //	mParams.setOptions("", "");
 	mParams->addParam("fps: ", &mFps);
-//	vector<string> mesh_types;
-//	mesh_types.push_back("SurfaceTriMesh");
-//	mesh_types.push_back("SurfaceVboMesh");
-//	mParams->addParam("surface type", mesh_types, &mSurfaceMeshType);
+	
 	vector<string> cameras;
 	cameras.push_back("Maya cam");
 	cameras.push_back("Static cam");
@@ -417,17 +412,11 @@ void RibbonApp::update()
 	if (!mPause) {
 		this->updateSplinePatch();
 		
-		// TODO: re-enable these lines...
-//		bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
-//		bsplineRect.setControlPointLatice(mCtrlPoints);	// does not work yet :(
-//		if (mSurfaceMeshType == 0 && surfaceMesh) {
-//			surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
-//			surfaceMesh.updateSurface(bsplineRect);
-//		}
-//		else if (mSurfaceMeshType == 1 && surfaceVbo) {
-//			surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
-//			surfaceVbo.updateSurface(bsplineRect);
-//		}
+		bsplineRect.create(mCtrlPoints, mLaticeWidth, mLaticeLength, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+		BSplineSurface surfaceMesh = BSplineSurface( bsplineRect, ivec2( mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+		TriMeshRef surface = TriMesh::create( surfaceMesh );
+		//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
+		mMesh = gl::VboMesh::create( *surface.get() );
 	}
 	
 	if (mCameraIndex == 1) {
@@ -476,13 +465,6 @@ void RibbonApp::draw()
 	
 	gl::draw( mMesh );
 	
-//	if (mSurfaceMeshType == 0 && surfaceMesh) {
-//		gl::draw(surfaceMesh);
-//	}
-//	else if (mSurfaceMeshType == 1 && surfaceVbo) {
-//		gl::draw(surfaceVbo);
-//	}
-	
 	gl::disableWireframe();
 	
 	gl::disableCulling();
@@ -495,10 +477,11 @@ void RibbonApp::draw()
 		glPointSize(5.0f);
 		gl::begin(GL_POINTS);
 		gl::color(1,1,1,1);
-		ControlPointLatice::index i,j;
+		//ControlPointLatice::index i,j;
+		uint32_t i,j;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
-				gl::vertex(mCtrlPoints[i][j]);
+				gl::vertex(mCtrlPoints[i * mLaticeLength + j]);
 			}
 		}
 		gl::end();
@@ -552,9 +535,14 @@ void RibbonApp::updateSplinePatch()
 	// mLaticeWidth =>	x axis
 	// mLaticeLength =>	z axis
 	// TODO: Modify the weights above to smooth it out
+	
+	size_t meshSize = mLaticeWidth * mLaticeLength;
+	if (mCtrlPoints.size() != meshSize) mCtrlPoints.resize( meshSize );
+	
 	if (mLoopV) {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		//mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
+		//ControlPointLatice::index i,j;
+		uint32_t i,j;
 		float x, y, z;
 		float r_x, radius, theta, t_x;
 		float two_pi = static_cast<float>(2.0 * M_PI);
@@ -577,15 +565,16 @@ void RibbonApp::updateSplinePatch()
 				y += math<float>::cos((weights[j]) + i + t * freqX) * aX;
 				y += math<float>::sin((t * freqZ) + (i * 0.75f));
 				z = hull_pt.x * scale_z;
-				mCtrlPoints[i][j] = vec3(x,y,z);
+				mCtrlPoints[i * mLaticeLength + j] = vec3(x,y,z);
 				
 				theta += t_x;
 			}
 		}
 	}
 	else {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		//mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
+		//ControlPointLatice::index i,j;
+		uint32_t i,j;
 		float fX,fY,aX, x,y,z;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
@@ -597,7 +586,7 @@ void RibbonApp::updateSplinePatch()
 				y = scale_y * math<float>::cos((1.0f * weights[j]) + i + t * fX) * aX;
 				z = (j * scale_z) * (1.0f + math<float>::cos(i + t * freqY) * ampY);		//! position point-z
 				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;		//! add torsion-x to y
-				mCtrlPoints[i][j] = vec3(x,y,z);
+				mCtrlPoints[i * mLaticeLength + j] = vec3(x,y,z);
 			}
 		}
 	}

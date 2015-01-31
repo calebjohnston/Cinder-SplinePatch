@@ -4,7 +4,7 @@
 #include "cinder/Vector.h"
 #include "cinder/CinderAssert.h"
 
-#include "SurfaceTriMesh.h"
+#include "BSplineSurface.h"
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -132,19 +132,16 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
         for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i) {
             float vIncr = vDelta*vIndex;
             float v = vMin + vIncr;
+			
 			// add normal vector and vertex position
 			vec3 position, tan0, tan1, normal;
 			mPatch.getFrame(u, v, position, tan0, tan1, normal);
-			
-			//mTriMesh->appendVertex(position);
-			//mTriMesh->appendNormal(normal.inverse());
 			positions->emplace_back( position );
 			normals->emplace_back( normal * vec3(-1) );	// the triangle winding is wrong, requires inverse of normal
 			tangents->emplace_back( tan0 );
 			bitangents->emplace_back( tan1 );
 			
 			// add texture coordinate
-			//mTriMesh->appendTexCoord(tex_coord);
 			vec2 tex_coord(mMinTexCoord.x + tuDelta * uIncr, mMinTexCoord.y + tvDelta * vIncr);
 			texcoords->emplace_back( tex_coord );
         }
@@ -159,12 +156,10 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 		i2 = i;
 		i3 = i2 + 1;
 		for (vIndex = 0; vIndex < mSubdivisions.y - 1; ++vIndex) {
-			//mTriMesh->appendTriangle(i0,i1,i2);
 			indices->emplace_back(i0);
 			indices->emplace_back(i1);
 			indices->emplace_back(i2);
 			
-			//mTriMesh->appendTriangle(i1,i3,i2);
 			indices->emplace_back(i1);
 			indices->emplace_back(i3);
 			indices->emplace_back(i2);
@@ -175,31 +170,11 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 			i3++;
 		}
 	}
-	/*
-	 geom::BufferLayout vertexLayout, normalLayout;
-	 vertexLayout.append(geom::Attrib::POSITION, 3, 0, 0);
-	 normalLayout.append(geom::Attrib::NORMAL, 3, 0, 0);
-	 vector<vec3> vertices;
-	 vector<vec3> normals;
-	 vector<uint32_t> indices;
-	 // populate ...
-	 gl::VboRef indexVbo = ci::gl::Vbo::create( GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW );
-	 gl::VboRef normalVbo = ci::gl::Vbo::create( GL_ARRAY_BUFFER, normals, GL_DYNAMIC_DRAW );
-	 gl::VboRef vertexVbo = ci::gl::Vbo::create( GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW );
-	 std::vector<std::pair<geom::BufferLayout, gl::VboRef> > vertexArrayBuffers;
-	 vertexArrayBuffers.push_back( std::make_pair( normalLayout, normalVbo ) );
-	 vertexArrayBuffers.push_back( std::make_pair( vertexLayout, vertexVbo ) );
-	 mParticleMesh = gl::VboMesh::create( this->mMaxParticles * 2, GL_LINES, vertexArrayBuffers, this->mMaxParticles * 2, GL_UNSIGNED_INT, indexVbo );
-	 */
 }
 
 //void BSplineSurface::init( const BSplinePatch& patch, const ivec2& subdivisions )
 void BSplineSurface::init( const ivec2& subdivisions )
 {
-	CI_ASSERT(mPatch.isRectangular());
-	
-	//mPatch = BSplinePatch(patch);
-
 	uint32_t subdX = std::max( 2, subdivisions.x );
 	uint32_t subdY = std::max( 2, subdivisions.y );
 

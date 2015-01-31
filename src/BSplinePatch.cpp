@@ -25,88 +25,68 @@
 using namespace ci;
 
 BSplinePatch::BSplinePatch()
-:	mUMin(0), mUMax(1), mVMin(0), mVMax(1), mRectangular(true)
+:	mDomainMin(0), mDomainMax(1)
 {
 	mLoop[0] = false;
 	mLoop[1] = false;
-	mReplicate[0] = 0;
-	mReplicate[1] = 0;
-	mNumCtrlPoints[0] = 0;
-	mNumCtrlPoints[1] = 0;
+	mReplicate.s = 0;
+	mReplicate.t = 0;
+	mNumCtrlPoints.s = 0;
+	mNumCtrlPoints.t = 0;
 }
-
-//BSplinePatch::BSplinePatch( const BSplinePatch& bspline )
-//{
-//	this->mUMin = bspline.mUMin;
-//	this->mUMax = bspline.mUMax;
-//	this->mVMin = bspline.mVMin;
-//	this->mVMax = bspline.mVMax;
-//	this->mRectangular = bspline.mRectangular;
-//	std::memmove(this->mLoop, bspline.mLoop, 2 * sizeof(bool));
-//	std::memmove(this->mReplicate, bspline.mReplicate, 2 * sizeof(uint32_t));
-//	std::memmove(this->mNumCtrlPoints, bspline.mNumCtrlPoints, 2 * sizeof(uint32_t));
-//	std::memmove(this->mBasis, bspline.mBasis, 2 * sizeof(ci::BSplineBasis));
-
-	// Cannot copy the boost::multi_array. Super cool!
-	// so dumb...
-//	std::vector<size_t> extents;
-//	const size_t* shape = bspline.mControlPoints.shape();
-//	extents.assign( shape, shape + bspline.mControlPoints.num_dimensions() );
-//	this->mControlPoints.resize( extents );
-//	this->mControlPoints.reshape( extents );
-//	this->mControlPoints = bspline.mControlPoints;
-	
-	//this->mControlPoints = boost::multi_array<ci::vec3, 2>( bspline.mControlPoints );
-//}
-
-//BSplinePatch& BSplinePatch::operator=( const BSplinePatch& bspline )
-//{
-//	
-//	return *this;
-//}
 
 BSplinePatch::~BSplinePatch()
 {
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
-:	mUMin(0), mUMax(1), mVMin(0), mVMax(1), mRectangular(true)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const uint32_t uSize, const uint32_t vSize,
+						   const uint32_t uDegree, const uint32_t vDegree,
+						   bool uLoop, bool vLoop, bool uOpen, bool vOpen)
+:	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(mUMin < mUMax && mVMin < mVMax);
+	CI_ASSERT(mDomainMin.s < mDomainMax.s && mDomainMin.t < mDomainMax.t);
 	
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vOpen);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uOpen, vOpen);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
-:	mUMin(0), mUMax(1), mVMin(0), mVMax(1), mRectangular(true)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const uint32_t uSize, const uint32_t vSize,
+						   const uint32_t uDegree, const uint32_t vDegree,
+						   bool uLoop, bool vLoop, bool uOpen, float* vKnot)
+:	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(mUMin < mUMax && mVMin < mVMax);
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vKnot);
+	CI_ASSERT(mDomainMin.s < mDomainMax.s && mDomainMin.t < mDomainMax.t);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uOpen, vKnot);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
-:	mUMin(0), mUMax(1), mVMin(0), mVMax(1), mRectangular(true)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const uint32_t uSize, const uint32_t vSize,
+						   const uint32_t uDegree, const uint32_t vDegree,
+						   bool uLoop, bool vLoop, float* uKnot, bool vOpen)
+:	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(mUMin < mUMax && mVMin < mVMax);
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vOpen);
+	CI_ASSERT(mDomainMin.s < mDomainMax.s && mDomainMin.t < mDomainMax.t);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uKnot, vOpen);
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
-:	mUMin(0), mUMax(1), mVMin(0), mVMax(1), mRectangular(true)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const uint32_t uSize, const uint32_t vSize,
+						   const uint32_t uDegree, const uint32_t vDegree,
+						   bool uLoop, bool vLoop, float* uKnot, float* vKnot)
+:	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(mUMin < mUMax && mVMin < mVMax);
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vKnot);
+	CI_ASSERT(mDomainMin.s < mDomainMax.s && mDomainMin.t < mDomainMax.t);
+	this->create(ctrlPoints, uSize, vSize, uDegree, vDegree, uLoop, vLoop, uKnot, vKnot);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
+void BSplinePatch::create(const std::vector<vec3>& ctrlPoints,
+						  const uint32_t uSize, const uint32_t vSize,
+						  const uint32_t uDegree, const uint32_t vDegree,
+						  bool uLoop, bool vLoop, bool uOpen, bool vOpen)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	CI_ASSERT(numUCtrlPoints >= 2);
 	CI_ASSERT(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -116,21 +96,24 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
 	mLoop[0] = uLoop;
     mLoop[1] = vLoop;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? (uOpen ? 1 : uDegree) : 0);
-    mReplicate[1] = (vLoop ? (vOpen ? 1 : vDegree) : 0);
-    createControls(ctrlPoints);
+    mNumCtrlPoints.s = numUCtrlPoints;
+    mNumCtrlPoints.t = numVCtrlPoints;
+    mReplicate.s = (uLoop ? (uOpen ? 1 : uDegree) : 0);
+    mReplicate.t = (vLoop ? (vOpen ? 1 : vDegree) : 0);
 	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uOpen);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, uDegree, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, vDegree, vOpen);
+	
+    createControls(ctrlPoints);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
+void BSplinePatch::create(const std::vector<vec3>& ctrlPoints,
+						  const uint32_t uSize, const uint32_t vSize,
+						  const uint32_t uDegree, const uint32_t vDegree,
+						  bool uLoop, bool vLoop, bool uOpen, float* vKnot)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	CI_ASSERT(numUCtrlPoints >= 2);
 	CI_ASSERT(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -140,21 +123,24 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mLoop[0] = uLoop;
     mLoop[1] = vLoop;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? (uOpen ? 1 : uDegree) : 0);
-    mReplicate[1] = (vLoop ? 1 : 0);
-    createControls(ctrlPoints);
+    mNumCtrlPoints.s = numUCtrlPoints;
+    mNumCtrlPoints.t = numVCtrlPoints;
+    mReplicate.s = (uLoop ? (uOpen ? 1 : uDegree) : 0);
+    mReplicate.t = (vLoop ? 1 : 0);
 	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uOpen);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vKnot);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, uDegree, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, vDegree, vKnot);
+	
+    createControls(ctrlPoints);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
+void BSplinePatch::create(const std::vector<vec3>& ctrlPoints,
+						  const uint32_t uSize, const uint32_t vSize,
+						  const uint32_t uDegree, const uint32_t vDegree,
+						  bool uLoop, bool vLoop, float* uKnot, bool vOpen)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	CI_ASSERT(numUCtrlPoints >= 2);
 	CI_ASSERT(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -164,21 +150,24 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mLoop[0] = uLoop;
     mLoop[1] = vLoop;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? 1 : 0);
-    mReplicate[1] = (vLoop ? (vOpen ? 1 : vDegree) : 0);
-    createControls(ctrlPoints);
+    mNumCtrlPoints.s = numUCtrlPoints;
+    mNumCtrlPoints.t = numVCtrlPoints;
+    mReplicate.s = (uLoop ? 1 : 0);
+    mReplicate.t = (vLoop ? (vOpen ? 1 : vDegree) : 0);
 	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uKnot);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, uDegree, uKnot);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, vDegree, vOpen);
+	
+    createControls(ctrlPoints);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
+void BSplinePatch::create(const std::vector<vec3>& ctrlPoints,
+						  const uint32_t uSize, const uint32_t vSize,
+						  const uint32_t uDegree, const uint32_t vDegree,
+						  bool uLoop, bool vLoop, float* uKnot, float* vKnot)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	size_t numUCtrlPoints = uSize;
+	size_t numVCtrlPoints = vSize;
 	
 	CI_ASSERT(numUCtrlPoints >= 2);
 	CI_ASSERT(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
@@ -188,36 +177,38 @@ void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
     mLoop[0] = uLoop;
     mLoop[1] = vLoop;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? 1 : 0);
-    mReplicate[1] = (vLoop ? 1 : 0);
-    createControls(ctrlPoints);
+    mNumCtrlPoints.s = numUCtrlPoints;
+    mNumCtrlPoints.t = numVCtrlPoints;
+    mReplicate.s = (uLoop ? 1 : 0);
+    mReplicate.t = (vLoop ? 1 : 0);
 	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uKnot);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vKnot);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, uDegree, uKnot);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, vDegree, vKnot);
+	
+    createControls(ctrlPoints);
 }
 
-void BSplinePatch::createControls(const ControlPointLatice& ctrlPoints)
+void BSplinePatch::createControls(const std::vector<vec3>& ctrlPoints)
 {
-    const uint32_t newNumUCtrlPoints = mNumCtrlPoints[0] + mReplicate[0];
-    const uint32_t newNumVCtrlPoints = mNumCtrlPoints[1] + mReplicate[1];
+    const uint32_t newNumUCtrlPoints = mNumCtrlPoints.s + mReplicate.s;
+    const uint32_t newNumVCtrlPoints = mNumCtrlPoints.t + mReplicate.t;
 	
 //	const uint32_t uSize = ctrlPoints.shape()[0];
 //	const uint32_t vSize = ctrlPoints.shape()[1];
-//	if (uSize != mNumCtrlPoints[0] || vSize != mNumCtrlPoints[1]) {
-//		
+//	if (uSize != mNumCtrlPoints.s || vSize != mNumCtrlPoints.t) {
+//		NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID
 //	}
-	mControlPoints.resize(boost::extents[newNumUCtrlPoints][newNumVCtrlPoints]);
-	if (newNumUCtrlPoints == mNumCtrlPoints[0] && newNumVCtrlPoints == mNumCtrlPoints[1]) {
-		mControlPoints = ControlPointLatice(ctrlPoints);
+	mControlPoints.clear();
+	mControlPoints.reserve( newNumUCtrlPoints * newNumVCtrlPoints );
+	if (newNumUCtrlPoints == mNumCtrlPoints.s && newNumVCtrlPoints == mNumCtrlPoints.t) {
+		mControlPoints = ctrlPoints;
 	}
 	else {
 		for (size_t u = 0; u < newNumUCtrlPoints; ++u) {
-			int uOld = u % mNumCtrlPoints[0];
+			int uOld = u % mNumCtrlPoints.s;
 			for (size_t v = 0; v < newNumVCtrlPoints; ++v) {
-				int vOld = v % mNumCtrlPoints[1];
-				mControlPoints[u][v] = ctrlPoints[uOld][vOld];
+				int vOld = v % mNumCtrlPoints.t;
+				mControlPoints[u * mNumCtrlPoints.t + v] = ctrlPoints[uOld * mNumCtrlPoints.t + vOld];
 			}
 		}
 	}
@@ -225,70 +216,58 @@ void BSplinePatch::createControls(const ControlPointLatice& ctrlPoints)
 
 void BSplinePatch::setControlPoint(const uint32_t uIndex, const uint32_t vIndex, const vec3& point)
 {
-    if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
-        // Set the control point.
-		mControlPoints[uIndex][vIndex] = point;
+    if (uIndex < mNumCtrlPoints.s && vIndex < mNumCtrlPoints.t) {
+		mControlPoints[uIndex * mNumCtrlPoints.t + vIndex] = point;
 
         // Set the replicated control point.
-        bool doUReplicate = (uIndex < mReplicate[0]);
-        bool doVReplicate = (vIndex < mReplicate[1]);
+        bool uReplicate = (uIndex < mReplicate.s);
+        bool vReplicate = (vIndex < mReplicate.t);
         uint32_t iUExt = 0, iVExt = 0;
 
-        if (doUReplicate){
-            iUExt = mNumCtrlPoints[0] + uIndex;
-            mControlPoints[iUExt][vIndex] = point;
+        if (uReplicate){
+            iUExt = mNumCtrlPoints.s + uIndex;
+            mControlPoints[iUExt * mNumCtrlPoints.t + vIndex] = point;
         }
 		
-        if (doVReplicate) {
-            iVExt = mNumCtrlPoints[1] + vIndex;
-            mControlPoints[uIndex][iVExt] = point;
+        if (vReplicate) {
+            iVExt = mNumCtrlPoints.t + vIndex;
+            mControlPoints[uIndex * mNumCtrlPoints.t + iVExt] = point;
         }
 		
-        if (doUReplicate && doVReplicate) {
-            mControlPoints[iUExt][iVExt] = point;
+        if (uReplicate && vReplicate) {
+            mControlPoints[iUExt * mNumCtrlPoints.t + iVExt] = point;
         }
     }
 }
 
 vec3 BSplinePatch::getControlPoint(const uint32_t uIndex, const uint32_t vIndex) const
 {
-    if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
-        return mControlPoints[uIndex][vIndex];
+    if (uIndex < mNumCtrlPoints.s && vIndex < mNumCtrlPoints.t) {
+        return mControlPoints[uIndex * mNumCtrlPoints.t + vIndex];
     }
 
     return vec3( std::numeric_limits<float>::max() );
 }
 
-void BSplinePatch::setControlPointLatice(const ControlPointLatice& ctrlPoints)
+void BSplinePatch::updateControlPoints(const std::vector<vec3>& ctrlPoints, const uint32_t uSize, const uint32_t vSize)
 {
-	CI_ASSERT(ctrlPoints.shape()[0] == mNumCtrlPoints[0]);
-	CI_ASSERT(ctrlPoints.shape()[1] == mNumCtrlPoints[1]);
+	CI_ASSERT(uSize == mNumCtrlPoints.s);
+	CI_ASSERT(vSize == mNumCtrlPoints.t);
 	
 	createControls(ctrlPoints);
 }
 
-ControlPointLatice BSplinePatch::getControlPointLatice() const
+void BSplinePatch::setKnot(const uint8_t dim, const uint32_t i, float knot)
 {
-	return mControlPoints;
-}
-
-void BSplinePatch::setKnot(const uint32_t dim, const uint32_t i, float knot)
-{
-	if (dim == 0) {
-		mBasis[0].setKnot(i, static_cast<float>(knot));
-	}
-	else if (dim == 1) {
-		mBasis[1].setKnot(i, static_cast<float>(knot));
+	if (mBasis.size() > dim) {
+		mBasis[dim].setKnot(i, static_cast<float>(knot));
 	}
 }
 
-float BSplinePatch::getKnot(const uint32_t dim, const uint32_t i) const
+float BSplinePatch::getKnot(const uint8_t dim, const uint32_t i) const
 {
-    if (dim == 0) {
-		return mBasis[0].getKnot(i);
-	}
-	else if (dim == 1) {
-		return mBasis[1].getKnot(i);
+    if (mBasis.size() > dim) {
+		mBasis[dim].getKnot(i);
 	}
 
     return std::numeric_limits<float>::max();
@@ -332,7 +311,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD0(iv);
-                *pos += tmp * mControlPoints[iu][iv];
+                *pos += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
@@ -342,7 +321,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD0(iv);
-                *derU += tmp * mControlPoints[iu][iv];
+                *derU += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
@@ -352,7 +331,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD1(iv);
-                *derV += tmp * mControlPoints[iu][iv];
+                *derV += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
@@ -362,7 +341,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD2(iu)*mBasis[1].getD0(iv);
-                *derUU += tmp * mControlPoints[iu][iv];
+                *derUU += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
@@ -372,7 +351,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD1(iv);
-                *derUV += tmp * mControlPoints[iu][iv];
+                *derUV += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
@@ -382,7 +361,7 @@ void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD2(iv);
-                *derVV += tmp * mControlPoints[iu][iv];
+                *derVV += tmp * mControlPoints[iu * mNumCtrlPoints.t + iv];
             }
         }
     }
