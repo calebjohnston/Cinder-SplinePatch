@@ -69,6 +69,7 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
 	CI_ASSERT(size.t >= 2);
 	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
+	CI_ASSERT(size.t - degree.t == vKnots.size());
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;
@@ -92,6 +93,7 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
 	CI_ASSERT(size.t >= 2);
 	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
+	CI_ASSERT(size.s - degree.s == uKnots.size());
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;
@@ -107,15 +109,16 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 }
 
 BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
-						   const ci::ivec2& size, const ci::ivec2& degree,
-						   const glm::bvec2& loop, const std::vector<float>& uKnots,
-						   const std::vector<float>& vKnots)
+						   const ci::ivec2& size, const ci::ivec2& degree, const glm::bvec2& loop,
+						   const std::vector<float>& uKnots, const std::vector<float>& vKnots)
 :	mDomainMin(0), mDomainMax(1)
 {
 	CI_ASSERT(size.s >= 2);
 	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
 	CI_ASSERT(size.t >= 2);
 	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
+	CI_ASSERT(size.s - degree.s == uKnots.size());
+	CI_ASSERT(size.t - degree.t == vKnots.size());
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;

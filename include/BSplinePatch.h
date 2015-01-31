@@ -45,43 +45,43 @@ public:
 	
 	// (ON,ON)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
-				 const ci::ivec2& size, const ci::ivec2& degree,
-				 const glm::bvec2& loop, const std::vector<float>& uKnots, const std::vector<float>& vKnots);
+				 const ci::ivec2& size, const ci::ivec2& degree, const glm::bvec2& loop, 
+				 const std::vector<float>& uKnots, const std::vector<float>& vKnots);
 	
 	virtual ~BSplinePatch();
 	
-	uint32_t getNumControlPoints(const uint16_t dim) const { return mNumCtrlPoints[dim]; }
-	uint32_t getDegree(const uint16_t dim) const { return mBasis[dim].getDegree(); }
-	uint32_t getNumSpans(const uint16_t dim) const { return mNumCtrlPoints[dim] - mBasis[dim].getDegree(); }
-	bool isOpen(const uint16_t dim) const { return mBasis[dim].isOpen(); }
-	bool isUniform(const uint16_t dim) const { return mBasis[dim].isUniform(); }
-	bool isLoop(const uint16_t dim) const { return mLoop[dim]; }
+	uint32_t	getNumControlPoints(const uint8_t dim) const { return mNumCtrlPoints[dim]; }
+	uint32_t	getDegree(const uint8_t dim) const { return mBasis[dim].getDegree(); }
+	uint32_t	getNumSpans(const uint8_t dim) const { return mNumCtrlPoints[dim] - mBasis[dim].getDegree(); }
+	bool		isUniform(const uint8_t dim) const { return mBasis[dim].isUniform(); }
+	bool		isOpen(const uint8_t dim) const { return mBasis[dim].isOpen(); }
+	bool		isLoop(const uint8_t dim) const { return mLoop[dim]; }
 
 	// Control points may be changed at any time. If either input index is
 	// invalid, GetControlPoint returns a vector whose components are all MAX_REAL.
-	void setControlPoint(const ci::ivec2& index, const ci::vec3& point);
-	ci::vec3 getControlPoint(const ci::ivec2& index) const;
+	void		setControlPoint(const ci::ivec2& index, const ci::vec3& point);
+	ci::vec3	getControlPoint(const ci::ivec2& index) const;
 		
 	/** */
-	void updateControlPoints(const std::vector<ci::vec3>& ctrlPoints, const ci::ivec2& size);
+	void		updateControlPoints(const std::vector<ci::vec3>& ctrlPoints, const ci::ivec2& size);
 	/** */
 	std::vector<ci::vec3>& getControlPoints() { return mControlPoints; }
 
 	// The knot values can be changed only if the surface is nonuniform in the
 	// selected dimension and only if the input index is valid. If these
 	// conditions are not satisfied, GetKnot returns MAX_REAL.
-	void setKnot(const uint8_t dim, const uint32_t i, float knot);
-	float getKnot(const uint8_t dim, const uint32_t i) const;
+	void		setKnot(const uint8_t dim, const uint32_t i, float knot);
+	float		getKnot(const uint8_t dim, const uint32_t i) const;
 
 	// The spline is defined for 0 <= u <= 1 and 0 <= v <= 1. The input
 	// values should be in this domain. Any inputs smaller than 0 are clamped
 	// to 0. Any inputs larger than 1 are clamped to 1.
-	ci::vec3 P(float u, float v) const;
-	ci::vec3 PU(float u, float v) const;
-	ci::vec3 PV(float u, float v) const;
-	ci::vec3 PUU(float u, float v) const;
-	ci::vec3 PUV(float u, float v) const;
-	ci::vec3 PVV(float u, float v) const;
+	ci::vec3	P(float u, float v) const;
+	ci::vec3	PU(float u, float v) const;
+	ci::vec3	PV(float u, float v) const;
+	ci::vec3	PUU(float u, float v) const;
+	ci::vec3	PUV(float u, float v) const;
+	ci::vec3	PVV(float u, float v) const;
 	
 	// ------------------------------------------------------------------------
 	//	ci::vec3 getPosition(float u, float v) const;
@@ -99,13 +99,13 @@ public:
 	inline float getVMin() const { return mDomainMin.t; }
 	inline float getVMax() const { return mDomainMax.t; }
 	
-	ci::vec3 tangent0(float u, float v) const;	// rename to tangent()
-	ci::vec3 tangent1(float u, float v) const;	// rename to bitangent()
-	ci::vec3 position(float u, float v) const;
-	ci::vec3 normal(float u, float v) const;
+	ci::vec3	tangent0(float u, float v) const;	// rename to tangent()
+	ci::vec3	tangent1(float u, float v) const;	// rename to bitangent()
+	ci::vec3	position(float u, float v) const;
+	ci::vec3	normal(float u, float v) const;
 	
 	// Compute a coordinate frame. The set {T0,T1,N} is a right-handed orthonormal set.
-	void getFrame(float u, float v, ci::vec3& position, ci::vec3& tangent0,
+	void		getFrame(float u, float v, ci::vec3& position, ci::vec3& tangent0,
 				  ci::vec3& tangent1, ci::vec3& normal) const;
 	
 	/**
@@ -120,7 +120,8 @@ public:
 	 * @param direction0
 	 * @param direction1
 	 */
-	void computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1, ci::vec3& direction0, ci::vec3& direction1);
+	void		computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1,
+											  ci::vec3& direction0, ci::vec3& direction1);
 	
 	/**
 	 * Returns the position and derivatives in the parameter list for the
@@ -138,11 +139,11 @@ public:
 	 * @param derUV the first order partial derivative at the location (u,v)
 	 * @param derVV the second derivative on the vertical axis at the location (u,v)
 	 */
-	void get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV, 
-			 ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
+	void		get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV,
+					ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
 	
 	// Access the basis function to compute it without control points.
-	ci::BSplineBasis& getBasis( const uint8_t dim ) { return mBasis[dim]; }
+	ci::BSplineBasis& getBasis(const uint8_t dim) { return mBasis[dim]; }
 	
 protected:	
 	// Replicate the necessary number of control points when the create
@@ -150,8 +151,7 @@ protected:
 	// must be a closed surface in the corresponding dimension.
 	void createControls(const std::vector<ci::vec3>& ctrlPoints);
 	
-	ci::vec2 mDomainMin;
-	ci::vec2 mDomainMax;
+	ci::vec2 mDomainMin, mDomainMax;
 	
 	glm::bvec2 mLoop;						//!< Stores whether or not the basis function loops in either dimension
 	ci::ivec2 mReplicate;					//!< Stores whether or not the points are replicated in either dimension

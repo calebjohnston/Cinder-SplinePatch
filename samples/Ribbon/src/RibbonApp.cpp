@@ -133,12 +133,12 @@ private:
 //	int32_t					mHullEdges;
 	params::InterfaceGlRef	mParams;
 
-	bool mIsReady;
-	BSplinePatch bsplineRect;
-	std::vector<ci::vec3> mCtrlPoints;
-	std::vector<float> mCtrlKnotsV;
-	ci::gl::VboMeshRef mMesh;
-	ci::gl::GlslProgRef mShader;
+	bool					mIsReady;
+	BSplinePatch			mBSplineRect;
+	std::vector<ci::vec3>	mCtrlPoints;
+	std::vector<float>		mCtrlKnotsV;
+	ci::gl::VboMeshRef		mMesh;
+	ci::gl::GlslProgRef		mShader;
 	
 	float					mKnot0;
 	float					mKnot1;
@@ -231,13 +231,9 @@ void RibbonApp::setup()
 	
 	this->updateSplinePatch();
 	this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
-	bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
-	//bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV);
-	//
-	//surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
-	//surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
-	//
-	BSplineSurface surfaceMesh = BSplineSurface(bsplineRect, ivec2(mMeshWidth, mMeshLength)).texCoords( vec2(0,0), vec2(1,1) );
+	//mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV );
+	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
 	TriMeshRef surface = TriMesh::create( surfaceMesh );
 	mMesh = gl::VboMesh::create( *surface.get() );
 	
@@ -427,9 +423,10 @@ void RibbonApp::update()
 		this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
 	}
 	
-	//bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV);
-	bsplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
-	BSplineSurface surfaceMesh = BSplineSurface( bsplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	//mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+	mBSplineRect.updateControlPoints( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength) );
+	//mBSplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
+	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
 	TriMeshRef surface = TriMesh::create( surfaceMesh );
 	//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
 	mMesh = gl::VboMesh::create( *surface.get() );
