@@ -5,8 +5,6 @@
 
 #include "ParametricSurface.h"
 
-namespace cg {
-
 /**
  * @brief A surface object that generates a VboMesh from a ParametricSurface
  *
@@ -29,7 +27,7 @@ public:
 	/** C'stors */
 	SurfaceVboMesh() { mNumSamples[0] = mNumSamples[1] = 0; }
 	SurfaceVboMesh(const ParametricSurface& surface, const uint32_t numUSamples, const uint32_t numVSamples,
-						   const ci::Vec2f& texcoordMin, const ci::Vec2f& texcoordMax);
+						   const ci::vec2& texcoordMin, const ci::vec2& texcoordMax);
 	
 	/** D'stor */
 	virtual ~SurfaceVboMesh() {} // By default all members will be deallocated as desired
@@ -59,5 +57,3 @@ protected:
 	uint32_t mNumSamples[2];	//!< Stores the number of geometric quads (or tri pairs) to create on either axis
 	ci::gl::VboMesh mVboMesh;	//!< Internal VBO mesh object used for manipulation and drawing 
 };
-	
-}	// namespace cg

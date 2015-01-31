@@ -13,11 +13,10 @@
 		00B784B50FF439BC000DE1D7 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B10FF439BC000DE1D7 /* AudioUnit.framework */; };
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
 		3CAF5760B5E049F9A912CB15 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4E20FCF86A714235AE15D580 /* CinderApp.icns */; };
+		3CE34D961A7C212500A54164 /* SurfaceTriMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */; };
+		3CE34D981A7C48FC00A54164 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CE34D971A7C48FC00A54164 /* AVFoundation.framework */; };
+		3CE34D9A1A7C493700A54164 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CE34D991A7C493700A54164 /* CoreMedia.framework */; };
 		4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90717AAC57E00832470 /* BSplinePatch.cpp */; };
-		4165C90D17AAC57E00832470 /* NurbsPatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90817AAC57E00832470 /* NurbsPatch.cpp */; };
-		4165C90E17AAC57E00832470 /* ParametricSurface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90917AAC57E00832470 /* ParametricSurface.cpp */; };
-		4165C90F17AAC57E00832470 /* SurfaceTriMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */; };
-		4165C91017AAC57E00832470 /* SurfaceVboMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -34,14 +33,12 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		3CE34D971A7C48FC00A54164 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		3CE34D991A7C493700A54164 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		4165C90717AAC57E00832470 /* BSplinePatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSplinePatch.cpp; path = ../../../src/BSplinePatch.cpp; sourceTree = "<group>"; };
-		4165C90817AAC57E00832470 /* NurbsPatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NurbsPatch.cpp; path = ../../../src/NurbsPatch.cpp; sourceTree = "<group>"; };
-		4165C90917AAC57E00832470 /* ParametricSurface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ParametricSurface.cpp; path = ../../../src/ParametricSurface.cpp; sourceTree = "<group>"; };
 		4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SurfaceTriMesh.cpp; path = ../../../src/SurfaceTriMesh.cpp; sourceTree = "<group>"; };
 		4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SurfaceVboMesh.cpp; path = ../../../src/SurfaceVboMesh.cpp; sourceTree = "<group>"; };
 		4165C91217AAC59500832470 /* BSplinePatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSplinePatch.h; path = ../../../include/BSplinePatch.h; sourceTree = "<group>"; };
-		4165C91317AAC59500832470 /* NurbsPatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NurbsPatch.h; path = ../../../include/NurbsPatch.h; sourceTree = "<group>"; };
-		4165C91417AAC59500832470 /* ParametricSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ParametricSurface.h; path = ../../../include/ParametricSurface.h; sourceTree = "<group>"; };
 		4165C91517AAC59500832470 /* SurfaceTriMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SurfaceTriMesh.h; path = ../../../include/SurfaceTriMesh.h; sourceTree = "<group>"; };
 		4165C91617AAC59500832470 /* SurfaceVboMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SurfaceVboMesh.h; path = ../../../include/SurfaceVboMesh.h; sourceTree = "<group>"; };
 		4E20FCF86A714235AE15D580 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
@@ -58,6 +55,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3CE34D9A1A7C493700A54164 /* CoreMedia.framework in Frameworks */,
+				3CE34D981A7C48FC00A54164 /* AVFoundation.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				0091D8F90E81B9330029341E /* OpenGL.framework in Frameworks */,
 				5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */,
@@ -154,6 +153,8 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3CE34D991A7C493700A54164 /* CoreMedia.framework */,
+				3CE34D971A7C48FC00A54164 /* AVFoundation.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
@@ -164,8 +165,6 @@
 			isa = PBXGroup;
 			children = (
 				4165C90717AAC57E00832470 /* BSplinePatch.cpp */,
-				4165C90817AAC57E00832470 /* NurbsPatch.cpp */,
-				4165C90917AAC57E00832470 /* ParametricSurface.cpp */,
 				4165C90A17AAC57E00832470 /* SurfaceTriMesh.cpp */,
 				4165C90B17AAC57E00832470 /* SurfaceVboMesh.cpp */,
 			);
@@ -185,8 +184,6 @@
 			isa = PBXGroup;
 			children = (
 				4165C91217AAC59500832470 /* BSplinePatch.h */,
-				4165C91317AAC59500832470 /* NurbsPatch.h */,
-				4165C91417AAC59500832470 /* ParametricSurface.h */,
 				4165C91517AAC59500832470 /* SurfaceTriMesh.h */,
 				4165C91617AAC59500832470 /* SurfaceVboMesh.h */,
 			);
@@ -219,6 +216,8 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Ribbon" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -256,10 +255,7 @@
 			files = (
 				AEBCFF89618E4D0CB0CEBD49 /* RibbonApp.cpp in Sources */,
 				4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */,
-				4165C90D17AAC57E00832470 /* NurbsPatch.cpp in Sources */,
-				4165C90E17AAC57E00832470 /* ParametricSurface.cpp in Sources */,
-				4165C90F17AAC57E00832470 /* SurfaceTriMesh.cpp in Sources */,
-				4165C91017AAC57E00832470 /* SurfaceVboMesh.cpp in Sources */,
+				3CE34D961A7C212500A54164 /* SurfaceTriMesh.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,14 +314,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = i386;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				CINDER_PATH = ../../../../..;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 			};
@@ -335,14 +331,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = i386;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				CINDER_PATH = ../../../../..;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/boost\"";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 			};

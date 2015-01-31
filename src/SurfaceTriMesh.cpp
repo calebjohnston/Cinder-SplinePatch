@@ -2,99 +2,207 @@
 #include <vector>
 
 #include "cinder/Vector.h"
+#include "cinder/CinderAssert.h"
 
-#include "ParametricSurface.h"
 #include "SurfaceTriMesh.h"
 
 ///////////////////////////////////////////////////////////////////////////
 //
-// TODO:	null
+// TODO:
 //
 ///////////////////////////////////////////////////////////////////////////
 
+using namespace std;
 using namespace ci;
-using namespace cg;
+using namespace ci::geom;
 
-SurfaceTriMesh::SurfaceTriMesh(const ParametricSurface& surface,
-	const uint32_t numUSamples, const uint32_t numVSamples, const ci::Vec2f& tcoordMin, const ci::Vec2f& tcoordMax)
+BSplineSurface::BSplineSurface(const BSplinePatch& patch, const ivec2& subdivisions )
+:	mPatch( patch )
 {
-	assert(surface.isRectangular());
+	init( subdivisions );
+}
+
+//BSplineSurface&	BSplineSurface::texCoords( const vec2 &upperLeft, const vec2 &upperRight, const vec2 &lowerRight, const vec2 &lowerLeft )
+BSplineSurface&	BSplineSurface::texCoords( const vec2 &minCoord, const vec2 &maxCoord )
+{
+	// TODO:
+//	mInputTexCoords[0] = upperLeft;
+//	mInputTexCoords[1] = upperRight;
+//	mInputTexCoords[2] = lowerLeft;
+//	mInputTexCoords[3] = lowerRight;
 	
-	mNumSamples[0] = numUSamples;
-	mNumSamples[1] = numVSamples;
+	mMinTexCoord = minCoord;
+	mMaxTexCoord = maxCoord;
+	
+	return *this;
+}
 
+void BSplineSurface::updateSurface(const BSplinePatch& patch)
+{
+	/*
 	// collect surface information
-    float uMin = surface.getUMin();
-    float uRange = surface.getUMax() - uMin;
-    float uDelta = uRange / static_cast<float>(mNumSamples[0] - 1);
-    float vMin = surface.getVMin();
-    float vRange = surface.getVMax() - vMin;
-    float vDelta = vRange / static_cast<float>(mNumSamples[1] - 1);
+    float uMin = patch.getUMin();
+    float uDelta = (patch.getUMax() - uMin) / static_cast<float>(mSubdivisions.x - 1);
+    float vMin = patch.getVMin();
+    float vDelta = (patch.getVMax() - vMin) / static_cast<float>(mSubdivisions.y - 1);
+	
+	// update all vertices and normals within the vertex buffer
+	float u, v;
+	uint32_t uIndex, vIndex, i;
+	vector<vec3>& verts = mTriMesh.getVertices();
+	vector<vec3>& norms = mTriMesh.getNormals();
+	vector<vec3>::iterator vert_itr = verts.begin();
+	vector<vec3>::iterator norm_itr = norms.begin();
+    for (uIndex = 0, i = 0; uIndex < mSubdivisions.x; ++uIndex) {
+        u = uMin + uDelta*uIndex;
+        for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i, ++vert_itr, ++norm_itr) {
+            v = vMin + vDelta*vIndex;
+			vert_itr->set(patch.position(u,v));
+			norm_itr->set(patch.normal(u,v).inverse());	// the triangle winding is wrong, requires inverse of normal
+        }
+    }
+	 */
+}
 
+
+uint8_t BSplineSurface::getAttribDims( Attrib attr ) const
+{
+	switch( attr ) {
+		case Attrib::POSITION: return 3;
+		case Attrib::NORMAL: return 3;
+		case Attrib::TANGENT: return 3;
+		case Attrib::BITANGENT: return 3;
+		case Attrib::TEX_COORD_0: return 2;
+		default:
+			return 0;
+	}
+}
+
+AttribSet BSplineSurface::getAvailableAttribs() const
+{
+	return { Attrib::POSITION, Attrib::NORMAL, Attrib::TANGENT, Attrib::BITANGENT, Attrib::TEX_COORD_0 };
+}
+
+void BSplineSurface::loadInto( Target *target, const AttribSet &requestedAttribs ) const
+{
+	vector<vec3> positions, normals, tangents, bitangents;
+	vector<vec2> texcoords;
+	vector<uint32_t> indices;
+	
+	calculate( &positions, &normals, &tangents, &bitangents, &texcoords, &indices );
+
+	target->copyAttrib( Attrib::POSITION, 3, 0, value_ptr( *positions.data() ), positions.size() );
+	target->copyAttrib( Attrib::NORMAL, 3, 0, value_ptr( *normals.data() ), normals.size() );
+	target->copyAttrib( Attrib::TANGENT, 3, 0, value_ptr( *tangents.data() ), tangents.size() );
+	target->copyAttrib( Attrib::BITANGENT, 3, 0, value_ptr( *bitangents.data() ), bitangents.size() );
+	target->copyAttrib( Attrib::TEX_COORD_0, 2, 0, value_ptr( *texcoords.data() ), texcoords.size() );
+
+	target->copyIndices( Primitive::TRIANGLES, indices.data(), indices.size(), 1 );
+}
+
+void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
+							    vector<vec3> *tangents, vector<vec3> *bitangents,
+							    vector<vec2> *texcoords, vector<uint32_t> *indices ) const
+{
+	positions->reserve( mNumVertices * sizeof(vec3) );
+	normals->reserve( mNumVertices * sizeof(vec3) );
+	tangents->reserve( mNumVertices * sizeof(vec3) );
+	bitangents->reserve( mNumVertices * sizeof(vec3) );
+	texcoords->reserve( mNumVertices * sizeof(vec2) );
+	indices->reserve( mNumVertices * sizeof(uint32_t) );
+	
+	// collect surface information
+    float uMin = mPatch.getUMin();
+    float uRange = mPatch.getUMax() - uMin;
+    float uDelta = uRange / static_cast<float>(mSubdivisions.x - 1);
+    float vMin = mPatch.getVMin();
+    float vRange = mPatch.getVMax() - vMin;
+    float vDelta = vRange / static_cast<float>(mSubdivisions.y - 1);
+	
 	// compute texture coordinate deltas
     float tuDelta = 0.0f, tvDelta = 0.0f;
-	tuDelta = (tcoordMax.x - tcoordMin.x) / uRange;
-	tvDelta = (tcoordMax.y - tcoordMin.y) / vRange;
-
+	tuDelta = (mMaxTexCoord.x - mMinTexCoord.x) / uRange;
+	tvDelta = (mMaxTexCoord.y - mMinTexCoord.y) / vRange;
+	
 	// set vertex positions, normals, and texture coordinates within buffer
     uint32_t uIndex, vIndex, i;
-    for (uIndex = 0, i = 0; uIndex < mNumSamples[0]; ++uIndex) {
+    for (uIndex = 0, i = 0; uIndex < mSubdivisions.x; ++uIndex) {
         float uIncr = uDelta*uIndex;
         float u = uMin + uIncr;
-        for (vIndex = 0; vIndex < mNumSamples[1]; ++vIndex, ++i) {
+        for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i) {
             float vIncr = vDelta*vIndex;
             float v = vMin + vIncr;
 			// add normal vector and vertex position
-			Vec3f position, tan0, tan1, normal;
-			surface.getFrame(u, v, position, tan0, tan1, normal);
-			mTriMesh.appendVertex(position);
-			mTriMesh.appendNormal(normal.inverse());	// the triangle winding is wrong, requires inverse of normal
+			vec3 position, tan0, tan1, normal;
+			mPatch.getFrame(u, v, position, tan0, tan1, normal);
+			
+			//mTriMesh->appendVertex(position);
+			//mTriMesh->appendNormal(normal.inverse());
+			positions->emplace_back( position );
+			normals->emplace_back( normal * vec3(-1) );	// the triangle winding is wrong, requires inverse of normal
+			tangents->emplace_back( tan0 );
+			bitangents->emplace_back( tan1 );
+			
 			// add texture coordinate
-			Vec2f tex_coord(tcoordMin.x + tuDelta * uIncr, tcoordMin.y + tvDelta * vIncr);
-			mTriMesh.appendTexCoord(tex_coord);
+			//mTriMesh->appendTexCoord(tex_coord);
+			vec2 tex_coord(mMinTexCoord.x + tuDelta * uIncr, mMinTexCoord.y + tvDelta * vIncr);
+			texcoords->emplace_back( tex_coord );
         }
     }
-
+	
 	// set the index buffer values
 	int i0,i1,i2,i3;
-	for (uIndex = 0, i = 0; uIndex < mNumSamples[0] - 1; ++uIndex) {
+	for (uIndex = 0, i = 0; uIndex < mSubdivisions.x - 1; ++uIndex) {
 		i0 = i;
 		i1 = i0 + 1;
-		i += mNumSamples[1];
+		i += mSubdivisions.y;
 		i2 = i;
 		i3 = i2 + 1;
-		for (vIndex = 0; vIndex < mNumSamples[1] - 1; ++vIndex) {
-			mTriMesh.appendTriangle(i0,i1,i2);
-			mTriMesh.appendTriangle(i1,i3,i2);
+		for (vIndex = 0; vIndex < mSubdivisions.y - 1; ++vIndex) {
+			//mTriMesh->appendTriangle(i0,i1,i2);
+			indices->emplace_back(i0);
+			indices->emplace_back(i1);
+			indices->emplace_back(i2);
+			
+			//mTriMesh->appendTriangle(i1,i3,i2);
+			indices->emplace_back(i1);
+			indices->emplace_back(i3);
+			indices->emplace_back(i2);
+			
 			i0++;
 			i1++;
 			i2++;
 			i3++;
 		}
 	}
+	/*
+	 geom::BufferLayout vertexLayout, normalLayout;
+	 vertexLayout.append(geom::Attrib::POSITION, 3, 0, 0);
+	 normalLayout.append(geom::Attrib::NORMAL, 3, 0, 0);
+	 vector<vec3> vertices;
+	 vector<vec3> normals;
+	 vector<uint32_t> indices;
+	 // populate ...
+	 gl::VboRef indexVbo = ci::gl::Vbo::create( GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW );
+	 gl::VboRef normalVbo = ci::gl::Vbo::create( GL_ARRAY_BUFFER, normals, GL_DYNAMIC_DRAW );
+	 gl::VboRef vertexVbo = ci::gl::Vbo::create( GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW );
+	 std::vector<std::pair<geom::BufferLayout, gl::VboRef> > vertexArrayBuffers;
+	 vertexArrayBuffers.push_back( std::make_pair( normalLayout, normalVbo ) );
+	 vertexArrayBuffers.push_back( std::make_pair( vertexLayout, vertexVbo ) );
+	 mParticleMesh = gl::VboMesh::create( this->mMaxParticles * 2, GL_LINES, vertexArrayBuffers, this->mMaxParticles * 2, GL_UNSIGNED_INT, indexVbo );
+	 */
 }
 
-void SurfaceTriMesh::updateSurface(const ParametricSurface& surface)
+//void BSplineSurface::init( const BSplinePatch& patch, const ivec2& subdivisions )
+void BSplineSurface::init( const ivec2& subdivisions )
 {
-	// collect surface information
-    float uMin = surface.getUMin();
-    float uDelta = (surface.getUMax() - uMin) / static_cast<float>(mNumSamples[0] - 1);
-    float vMin = surface.getVMin();
-    float vDelta = (surface.getVMax() - vMin) / static_cast<float>(mNumSamples[1] - 1);
+	CI_ASSERT(mPatch.isRectangular());
 	
-	// update all vertices and normals within the vertex buffer
-	float u, v;
-	uint32_t uIndex, vIndex, i;
-	std::vector<Vec3f>& verts = mTriMesh.getVertices();
-	std::vector<Vec3f>& norms = mTriMesh.getNormals();
-	std::vector<Vec3f>::iterator vert_itr = verts.begin();
-	std::vector<Vec3f>::iterator norm_itr = norms.begin();
-    for (uIndex = 0, i = 0; uIndex < mNumSamples[0]; ++uIndex) {
-        u = uMin + uDelta*uIndex;
-        for (vIndex = 0; vIndex < mNumSamples[1]; ++vIndex, ++i, ++vert_itr, ++norm_itr) {
-            v = vMin + vDelta*vIndex;
-			vert_itr->set(surface.position(u,v));
-			norm_itr->set(surface.normal(u,v).inverse());	// the triangle winding is wrong, requires inverse of normal
-        }
-    }
+	//mPatch = BSplinePatch(patch);
+
+	uint32_t subdX = std::max( 2, subdivisions.x );
+	uint32_t subdY = std::max( 2, subdivisions.y );
+
+	mSubdivisions = ivec2(subdX, subdY);
+	mNumVertices = mSubdivisions.x * mSubdivisions.y;
 }

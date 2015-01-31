@@ -1,11 +1,13 @@
 #pragma once
 
-#include "cinder/TriMesh.h"
+#include <array>
+#include <vector>
+
+#include "cinder/GeomIo.h"
 #include "cinder/Vector.h"
 
-#include "ParametricSurface.h"
+#include "BSplinePatch.h"
 
-namespace cg {
 
 /**
  * @brief A surface object that generates a TriMesh from a ParametricSurface
@@ -20,44 +22,47 @@ namespace cg {
  * indices, vertices, normals, and texture coordinates.
  *
  * @see cg::SurfaceVboMesh
- * @see cg::ParametricSurface
  * @see cg::BSplinePatch
- * @see cg::NurbsPatch
  */
-class SurfaceTriMesh {
+class BSplineSurface : public ci::geom::Source {
 public:
 	/** C'stors */
-	SurfaceTriMesh() { mNumSamples[0] = mNumSamples[1] = 0; }
-	SurfaceTriMesh(const ParametricSurface& surface, const uint32_t numUSamples, const uint32_t numVSamples,
-						   const ci::Vec2f& texcoordMin, const ci::Vec2f& texcoordMax);
-
+	BSplineSurface( const BSplinePatch& patch, const ci::ivec2& subdivisions = ci::ivec2(10) );
+	
+	//BSplineSurface&	texCoords( const ci::vec2 &upperLeft, const ci::vec2 &upperRight, const ci::vec2 &lowerRight, const ci::vec2 &lowerLeft );
+	BSplineSurface&	texCoords( const ci::vec2 &minCoord, const ci::vec2 &maxCoord );
+	BSplineSurface&	subdivisions( const ci::ivec2 samples ) { init(samples); return *this; }
+	BSplineSurface&	subdivisionsX( const uint32_t xSamples ) { init(ci::ivec2(xSamples, mSubdivisions.y)); return *this; }
+	BSplineSurface&	subdivisionsY( const uint32_t ySamples ) { init(ci::ivec2(mSubdivisions.x, ySamples)); return *this; }
+	
 	/** D'stor */
-	virtual ~SurfaceTriMesh() {};	// de-allocates members as expected
+	virtual ~BSplineSurface() {};	// de-allocates members as expected
 	
 	/** Updates the surface geometry using the input parametric surface */
-	void updateSurface(const ParametricSurface& surface);
+	void		updateSurface(const BSplinePatch& surface);
 	
-	/**
-	 * Returns the number of quads (or tri pairs) created on the
-	 * dimension specified by the input parameter (0 == x, 1 == y)
-	 */
-	inline uint32_t getNumUSamples(const uint16_t dim) const { return mNumSamples[dim]; }
-
-	/** Returns a copy of the internal TriMesh instance */
-	inline ci::TriMesh trimesh() const { return mTriMesh; }
-	
-	/**
-	 * These overloaded operators emulate the shared_ptr behavior found
-	 * in the TriMesh class using the unspecified_bool_type operator.
-	 * The first operator allows one to draw the SurfaceTriMesh using the
-	 * same method used to draw a TriMesh -- gl::draw(const TriMesh&)
-	 */
-	operator const ci::TriMesh&() const { return mTriMesh; }
-	operator const bool() const { return mTriMesh.getVertices().size() > 0; }
+	size_t		getNumVertices() const override { return mNumVertices; }
+	size_t		getNumIndices() const override { return mNumVertices; }
+	ci::ivec2	getSubdivisions() const { return mSubdivisions; }
+	ci::geom::Primitive	getPrimitive() const override { return ci::geom::Primitive::TRIANGLES; }
+	uint8_t		getAttribDims( ci::geom::Attrib attr ) const override;
+	ci::geom::AttribSet	getAvailableAttribs() const override;
+	void		loadInto( ci::geom::Target *target, const ci::geom::AttribSet &requestedAttribs ) const override;
 	
 protected:
-	uint32_t mNumSamples[2];	//!< Stores the number of geometric quads (or tri pairs) to create on either axis
-	ci::TriMesh mTriMesh;		//!< Internal copy of the TriMesh object manipulated by a parametric surface
+	// creates surface geometry
+	void		calculate( std::vector<ci::vec3> *positions, std::vector<ci::vec3> *normals,
+						   std::vector<ci::vec3> *tangents, std::vector<ci::vec3> *bitangents,
+						   std::vector<ci::vec2> *texcoords, std::vector<uint32_t> *indices ) const;
+
+	// verify input patch and subdivision parameters + updates vert count
+	void		init( const ci::ivec2& subdivisions );
+
+	const BSplinePatch&				mPatch;
+	ci::ivec2						mSubdivisions;
+	uint32_t						mNumVertices;
+	//std::array<ci::vec2, 4>		mInputTexCoords;
+	ci::vec2						mMinTexCoord, mMaxTexCoord;
+
+
 };
-	
-}	// namespace cg

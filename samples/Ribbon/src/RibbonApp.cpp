@@ -1,13 +1,14 @@
 #include <time.h>
-#include <boost/bind.hpp>
 
 #include "cinder/app/AppNative.h"
+#include "cinder/app/RendererGl.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
 #include "cinder/gl/GlslProg.h"
-#include "cinder/gl/Vbo.h"
+#include "cinder/gl/VboMesh.h"
 #include "cinder/Color.h"
 #include "cinder/Rand.h"
+#include "cinder/GeomIo.h"
 #include "cinder/ImageIo.h"
 #include "cinder/Utilities.h"
 #include "cinder/System.h"
@@ -20,12 +21,11 @@
 
 #include "BSplinePatch.h"
 #include "SurfaceTriMesh.h"
-#include "SurfaceVboMesh.h"
+// #include "SurfaceVboMesh.h"
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
-using namespace cg;
 
 namespace cinder { namespace gl {
 
@@ -46,7 +46,14 @@ void disableCulling()
 	glDisable(GL_CULL_FACE);
 }
 	
-} }
+}
+
+vec2 fromPolar( vec2 pol )
+{
+	return vec2( math<float>::cos( pol.y ) *  pol.x , math<float>::sin( pol.y ) *  pol.x );
+}
+
+}
 
 class RibbonApp : public AppNative {
 public:
@@ -71,7 +78,7 @@ private:
 	CameraOrtho				mStaticCam;
 	CameraPersp				mCam;
 	MayaCamUI				mMayaCam;
-	Vec2i					mMousePos;
+	ivec2					mMousePos;
 	
 	float					mFps;
 	bool						mDrawBezierPatch;
@@ -108,9 +115,9 @@ private:
 	float					mStaticCam_right;
 	float					mStaticCam_top;
 	float					mStaticCam_bottom;
-	Vec3f					mStaticCam_position;
-	Vec3f					mStaticCam_direction;
-	Vec3f					mLightPosition;
+	vec3					mStaticCam_position;
+	vec3					mStaticCam_direction;
+	vec3					mLightPosition;
 	Color					mAmbientColor;
 	Color					mDiffuseColor;
 	Color					mSpecularColor;
@@ -127,11 +134,12 @@ private:
 	params::InterfaceGlRef	mParams;
 
 	bool mIsReady;
-	cg::BSplinePatch bsplineRect;
-	cg::SurfaceTriMesh surfaceMesh;
-	cg::SurfaceVboMesh surfaceVbo;
-	cg::ControlPointLatice mCtrlPoints;
-	ci::gl::GlslProg mShader;
+	BSplinePatch bsplineRect;
+	//BSplineSurface surfaceMesh;
+	//cg::SurfaceVboMesh surfaceVbo;
+	ControlPointLatice mCtrlPoints;
+	ci::gl::VboMeshRef mMesh;
+	ci::gl::GlslProgRef mShader;
 };
 
 void RibbonApp::prepareSettings( Settings *settings )
@@ -157,11 +165,11 @@ void RibbonApp::setup()
 	this->getWindow()->getSignalResize().connect(std::bind(&RibbonApp::resize, this));
 	
 	mFps = 0.0;
-	mSurfaceMeshType = 1;
+	mSurfaceMeshType = 0;
 	mEnableBackfaceCulling = false;
 	mEnableAdditiveBlending = true;
 	mDrawBezierPatch = false;
-	mDrawWireframe = false;
+	mDrawWireframe = true;
 	mPause = false;
 //	mHullEdges = 10;
 	mLaticeWidth = 8;
@@ -203,10 +211,10 @@ void RibbonApp::setup()
 	mStaticCam_right = 16.0f;
 	mStaticCam_top = 6.0f;
 	mStaticCam_bottom = -8.0f;
-	mLightPosition = Vec3f::one();
+	mLightPosition = vec3(1);
 	
 	try {
-		mShader = gl::GlslProg(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
+		mShader = gl::GlslProg::create(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
 	}
 	catch ( gl::GlslProgCompileExc& exc ) {
 		console() << "ribbon shader compile error: " << exc.what();
@@ -217,29 +225,34 @@ void RibbonApp::setup()
 	
 	this->updateSplinePatch();
 	bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
-	surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-	surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
+	//
+	//surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
+	//surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
+	//
+	BSplineSurface surfaceMesh = BSplineSurface(bsplineRect).subdivisions( ivec2( mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	TriMeshRef surface = TriMesh::create( surfaceMesh );
+	mMesh = gl::VboMesh::create( *surface.get() );
 	
-	Vec3f center = surfaceMesh.trimesh().calcBoundingBox().getCenter();
-	mCam.setEyePoint(Vec3f(center.x, 0.0f, 20.0f));
+	vec3 center = surface->calcBoundingBox().getCenter();
+	mCam.setEyePoint(vec3(center.x, 0.0f, 20.0f));
 	mCam.setCenterOfInterestPoint(center);
 	mCam.setPerspective(60.0f, getWindowAspectRatio(), 1.0f, 1000.0f);
 	mMayaCam.setCurrentCam(mCam);
-	mStaticCam_position = Vec3f(center.x, 0.0f, 20.0f);
-	mStaticCam_direction = Vec3f(0,0,-1.0f);
+	mStaticCam_position = vec3(center.x, 0.0f, 20.0f);
+	mStaticCam_direction = vec3(0,0,-1.0f);
 	
 	mStaticCam.setEyePoint(mStaticCam_position);
 	mStaticCam.setOrtho(mStaticCam_left, mStaticCam_right, mStaticCam_bottom, mStaticCam_top, 1.0, 1000.0f);
-	mStaticCam.setWorldUp(Vec3f(0,1,0));
+	mStaticCam.setWorldUp(vec3(0,1,0));
 	mStaticCam.setViewDirection(mStaticCam_direction);
 	
-	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", Vec2i(350, 600));
+	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
 //	mParams.setOptions("", "");
 	mParams->addParam("fps: ", &mFps);
-	vector<string> mesh_types;
-	mesh_types.push_back("SurfaceTriMesh");
-	mesh_types.push_back("SurfaceVboMesh");
-	mParams->addParam("surface type", mesh_types, &mSurfaceMeshType);
+//	vector<string> mesh_types;
+//	mesh_types.push_back("SurfaceTriMesh");
+//	mesh_types.push_back("SurfaceVboMesh");
+//	mParams->addParam("surface type", mesh_types, &mSurfaceMeshType);
 	vector<string> cameras;
 	cameras.push_back("Maya cam");
 	cameras.push_back("Static cam");
@@ -302,7 +315,7 @@ void RibbonApp::mouseMove( MouseEvent event )
 	
 	float x = static_cast<float>(mMousePos.x) / static_cast<float>(getWindowSize().x);
 	float y = static_cast<float>(mMousePos.y) / static_cast<float>(getWindowSize().y);
-	mLightPosition = Vec3f(0, y * 4.0f, 3.0 - x * 6.0f);
+	mLightPosition = vec3(0, y * 4.0f, 3.0 - x * 6.0f);
 }
 
 void RibbonApp::mouseDrag( MouseEvent event )
@@ -333,7 +346,7 @@ void RibbonApp::keyDown( KeyEvent event )
 {
 	if (event.isMetaDown() && event.getCode() == KeyEvent::KEY_w) this->quit();	// close window behavior
 	
-	Vec3f p;
+	vec3 p;
 	switch(event.getCode()){
 		case KeyEvent::KEY_a:
 //			rotate_b = false;
@@ -358,8 +371,8 @@ void RibbonApp::keyDown( KeyEvent event )
 			break;
 			
 		case KeyEvent::KEY_c:
-			mCam.setCenterOfInterestPoint(surfaceMesh.trimesh().calcBoundingBox().getCenter());
-			mMayaCam.setCurrentCam(mCam);
+			//mCam.setCenterOfInterestPoint(surfaceMesh.trimesh().calcBoundingBox().getCenter());
+			//mMayaCam.setCurrentCam(mCam);
 			break;
 
 //		case KeyEvent::KEY_UP:
@@ -404,22 +417,23 @@ void RibbonApp::update()
 	if (!mPause) {
 		this->updateSplinePatch();
 		
-		bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
+		// TODO: re-enable these lines...
+//		bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
 //		bsplineRect.setControlPointLatice(mCtrlPoints);	// does not work yet :(
-		if (mSurfaceMeshType == 0 && surfaceMesh) {
-			surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-			surfaceMesh.updateSurface(bsplineRect);
-		}
-		else if (mSurfaceMeshType == 1 && surfaceVbo) {
-			surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-			surfaceVbo.updateSurface(bsplineRect);
-		}
+//		if (mSurfaceMeshType == 0 && surfaceMesh) {
+//			surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
+//			surfaceMesh.updateSurface(bsplineRect);
+//		}
+//		else if (mSurfaceMeshType == 1 && surfaceVbo) {
+//			surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, vec2(0,0), vec2(1,1));
+//			surfaceVbo.updateSurface(bsplineRect);
+//		}
 	}
 	
 	if (mCameraIndex == 1) {
 		mStaticCam.setEyePoint(mStaticCam_position);
 		mStaticCam.setOrtho(mStaticCam_left, mStaticCam_right, mStaticCam_bottom, mStaticCam_top, 1.0, 1000.0f);
-		mStaticCam.setWorldUp(Vec3f(0,1,0));
+		mStaticCam.setWorldUp(vec3(0,1,0));
 		mStaticCam.setViewDirection(mStaticCam_direction);
 	}
 }
@@ -451,28 +465,30 @@ void RibbonApp::draw()
 	if (mDrawWireframe) gl::enableWireframe();
 	else if (mShader) {
 		gl::color(1,1,1,1);
-		mShader.bind();
-		mShader.uniform("lightPosition", Vec4f(mLightPosition,1.0f));
-		mShader.uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
-		mShader.uniform("alpha", mAlpha);
-		mShader.uniform("ambientColor", mAmbientColor);
-		mShader.uniform("diffuseColor", mDiffuseColor);
-		mShader.uniform("specularColor", mSpecularColor);
+//		mShader->bind();
+//		mShader->uniform("lightPosition", vec4(mLightPosition,1.0f));
+//		mShader->uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
+//		mShader->uniform("alpha", mAlpha);
+//		mShader->uniform("ambientColor", mAmbientColor);
+//		mShader->uniform("diffuseColor", mDiffuseColor);
+//		mShader->uniform("specularColor", mSpecularColor);
 	}
 	
-	if (mSurfaceMeshType == 0 && surfaceMesh) {
-		gl::draw(surfaceMesh);
-	}
-	else if (mSurfaceMeshType == 1 && surfaceVbo) {
-		gl::draw(surfaceVbo);
-	}
+	gl::draw( mMesh );
+	
+//	if (mSurfaceMeshType == 0 && surfaceMesh) {
+//		gl::draw(surfaceMesh);
+//	}
+//	else if (mSurfaceMeshType == 1 && surfaceVbo) {
+//		gl::draw(surfaceVbo);
+//	}
 	
 	gl::disableWireframe();
 	
 	gl::disableCulling();
 	
 	if (!mDrawWireframe && mShader) {
-		mShader.unbind();
+		//mShader->unbind();
 	}
 	
 	if (mDrawBezierPatch) {
@@ -498,11 +514,11 @@ void RibbonApp::drawWorldFrame()
 {
 	float s = 5.0f;
 	gl::color(1,0,0,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(s,0,0));
+	gl::drawLine(vec3(0), vec3(s,0,0));
 	gl::color(0,1,0,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(0,s,0));
+	gl::drawLine(vec3(0), vec3(0,s,0));
 	gl::color(0,0,1,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(0,0,s));
+	gl::drawLine(vec3(0), vec3(0,0,s));
 }
 
 void RibbonApp::updateSplinePatch()
@@ -555,13 +571,13 @@ void RibbonApp::updateSplinePatch()
 				float aX = (0.75f * ampX) + (3.5f * weights[j]);
 				float alpha = theta <= one_pi? (theta/one_pi): (two_pi - theta) / one_pi;
 				radius = lerp(radius_min, radius_max, s) + lerp(1.0f, hull_amp + math<float>::sin(j * freqY), alpha);
-				Vec2f hull_pt = fromPolar(Vec2f(radius, theta));
+				vec2 hull_pt = ci::fromPolar( vec2(radius, theta) );
 				x = i * scale_x;
 				y = hull_pt.y * scale_y;
 				y += math<float>::cos((weights[j]) + i + t * freqX) * aX;
 				y += math<float>::sin((t * freqZ) + (i * 0.75f));
 				z = hull_pt.x * scale_z;
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				mCtrlPoints[i][j] = vec3(x,y,z);
 				
 				theta += t_x;
 			}
@@ -581,7 +597,7 @@ void RibbonApp::updateSplinePatch()
 				y = scale_y * math<float>::cos((1.0f * weights[j]) + i + t * fX) * aX;
 				z = (j * scale_z) * (1.0f + math<float>::cos(i + t * freqY) * ampY);		//! position point-z
 				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;		//! add torsion-x to y
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				mCtrlPoints[i][j] = vec3(x,y,z);
 			}
 		}
 	}

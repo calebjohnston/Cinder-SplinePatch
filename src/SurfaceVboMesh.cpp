@@ -13,10 +13,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 using namespace ci;
-using namespace cg;
 
 SurfaceVboMesh::SurfaceVboMesh(const ParametricSurface& surface,
-	const uint32_t numUSamples, const uint32_t numVSamples, const ci::Vec2f& tcoordMin, const ci::Vec2f& tcoordMax)
+	const uint32_t numUSamples, const uint32_t numVSamples, const ci::vec2& tcoordMin, const ci::vec2& tcoordMax)
 {
 	assert(surface.isRectangular());
 	
