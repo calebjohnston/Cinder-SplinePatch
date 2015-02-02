@@ -83,14 +83,6 @@ public:
 	ci::vec3	PUV(float u, float v) const;
 	ci::vec3	PVV(float u, float v) const;
 	
-	// ------------------------------------------------------------------------
-	//	ci::vec3 getPosition(float u, float v) const;
-	//	ci::vec3 getFirstDerivative(float u, float v, uint16_t dim) const;
-	//	ci::vec3 getSecondDerivative(float u, float v, uint16_t dim) const;
-	//	ci::vec3 getThirdDerivative(float u, float v, uint16_t dim) const;
-	//	ci::vec3 getGradient(float u, float v) const;
-	// ------------------------------------------------------------------------
-	
 	// The parametric domain is rectangular for values (u,v).
 	// Valid (u,v) values for a rectangular domain satisfy:
 	//    umin <= u <= umax,  vmin <= v <= vmax
@@ -99,8 +91,8 @@ public:
 	inline float getVMin() const { return mDomainMin.t; }
 	inline float getVMax() const { return mDomainMax.t; }
 	
-	ci::vec3	tangent0(float u, float v) const;	// rename to tangent()
-	ci::vec3	tangent1(float u, float v) const;	// rename to bitangent()
+	ci::vec3	tangent(float u, float v) const;
+	ci::vec3	bitangent(float u, float v) const;
 	ci::vec3	position(float u, float v) const;
 	ci::vec3	normal(float u, float v) const;
 	
@@ -120,7 +112,7 @@ public:
 	 * @param direction0
 	 * @param direction1
 	 */
-	void		computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1,
+	void computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1,
 											  ci::vec3& direction0, ci::vec3& direction1);
 	
 	/**
@@ -139,7 +131,7 @@ public:
 	 * @param derUV the first order partial derivative at the location (u,v)
 	 * @param derVV the second derivative on the vertical axis at the location (u,v)
 	 */
-	void		get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV,
+	void get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV,
 					ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
 	
 	// Access the basis function to compute it without control points.

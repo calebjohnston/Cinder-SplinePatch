@@ -36,9 +36,6 @@ public:
 	/** D'stor */
 	virtual ~BSplineSurface() {};	// de-allocates members as expected
 	
-	/** Updates the surface geometry using the input parametric surface */
-	void		updateSurface(const BSplinePatch& surface);
-	
 	size_t		getNumVertices() const override { return mNumVertices; }
 	size_t		getNumIndices() const override { return mNumVertices * 6; }
 	ci::ivec2	getSubdivisions() const { return mSubdivisions; }

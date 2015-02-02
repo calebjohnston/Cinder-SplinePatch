@@ -354,12 +354,12 @@ vec3 BSplinePatch::PVV(float u, float v) const
     return derVV;
 }
 
-vec3 BSplinePatch::tangent0(float u, float v) const
+vec3 BSplinePatch::tangent(float u, float v) const
 {
     return normalize( PU(u, v) );
 }
 
-vec3 BSplinePatch::tangent1(float u, float v) const
+vec3 BSplinePatch::bitangent(float u, float v) const
 {
     vec3 tangent0 = PU(u, v);
     vec3 tangent1 = PV(u, v);

@@ -22,46 +22,12 @@ BSplineSurface::BSplineSurface(const BSplinePatch& patch, const ivec2& subdivisi
 	init( subdivisions );
 }
 
-//BSplineSurface&	BSplineSurface::texCoords( const vec2 &upperLeft, const vec2 &upperRight, const vec2 &lowerRight, const vec2 &lowerLeft )
 BSplineSurface&	BSplineSurface::texCoords( const vec2 &minCoord, const vec2 &maxCoord )
 {
-	// TODO:
-//	mInputTexCoords[0] = upperLeft;
-//	mInputTexCoords[1] = upperRight;
-//	mInputTexCoords[2] = lowerLeft;
-//	mInputTexCoords[3] = lowerRight;
-	
 	mMinTexCoord = minCoord;
 	mMaxTexCoord = maxCoord;
 	
 	return *this;
-}
-
-void BSplineSurface::updateSurface(const BSplinePatch& patch)
-{
-	/*
-	// collect surface information
-    float uMin = patch.getUMin();
-    float uDelta = (patch.getUMax() - uMin) / static_cast<float>(mSubdivisions.x - 1);
-    float vMin = patch.getVMin();
-    float vDelta = (patch.getVMax() - vMin) / static_cast<float>(mSubdivisions.y - 1);
-	
-	// update all vertices and normals within the vertex buffer
-	float u, v;
-	uint32_t uIndex, vIndex, i;
-	vector<vec3>& verts = mTriMesh.getVertices();
-	vector<vec3>& norms = mTriMesh.getNormals();
-	vector<vec3>::iterator vert_itr = verts.begin();
-	vector<vec3>::iterator norm_itr = norms.begin();
-    for (uIndex = 0, i = 0; uIndex < mSubdivisions.x; ++uIndex) {
-        u = uMin + uDelta*uIndex;
-        for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i, ++vert_itr, ++norm_itr) {
-            v = vMin + vDelta*vIndex;
-			vert_itr->set(patch.position(u,v));
-			norm_itr->set(patch.normal(u,v).inverse());	// the triangle winding is wrong, requires inverse of normal
-        }
-    }
-	 */
 }
 
 
@@ -172,7 +138,6 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 	}
 }
 
-//void BSplineSurface::init( const BSplinePatch& patch, const ivec2& subdivisions )
 void BSplineSurface::init( const ivec2& subdivisions )
 {
 	uint32_t subdX = std::max( 2, subdivisions.x );
