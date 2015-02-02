@@ -28,7 +28,6 @@ public:
 	/** C'stors */
 	BSplineSurface( const BSplinePatch& patch, const ci::ivec2& subdivisions = ci::ivec2(10) );
 	
-	//BSplineSurface&	texCoords( const ci::vec2 &upperLeft, const ci::vec2 &upperRight, const ci::vec2 &lowerRight, const ci::vec2 &lowerLeft );
 	BSplineSurface&	texCoords( const ci::vec2 &minCoord, const ci::vec2 &maxCoord );
 	BSplineSurface&	subdivisions( const ci::ivec2 samples ) { init(samples); return *this; }
 	BSplineSurface&	subdivisionsX( const uint32_t xSamples ) { init(ci::ivec2(xSamples, mSubdivisions.y)); return *this; }
@@ -41,7 +40,7 @@ public:
 	void		updateSurface(const BSplinePatch& surface);
 	
 	size_t		getNumVertices() const override { return mNumVertices; }
-	size_t		getNumIndices() const override { return mNumVertices; }
+	size_t		getNumIndices() const override { return mNumVertices * 6; }
 	ci::ivec2	getSubdivisions() const { return mSubdivisions; }
 	ci::geom::Primitive	getPrimitive() const override { return ci::geom::Primitive::TRIANGLES; }
 	uint8_t		getAttribDims( ci::geom::Attrib attr ) const override;
@@ -60,7 +59,6 @@ protected:
 	const BSplinePatch&				mPatch;
 	ci::ivec2						mSubdivisions;
 	uint32_t						mNumVertices;
-	//std::array<ci::vec2, 4>		mInputTexCoords;
 	ci::vec2						mMinTexCoord, mMaxTexCoord;
 
 
