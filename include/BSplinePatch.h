@@ -57,12 +57,17 @@ public:
 	bool		isOpen(const uint8_t dim) const { return mBasis[dim].isOpen(); }
 	bool		isLoop(const uint8_t dim) const { return mLoop[dim]; }
 
-	// Control points may be changed at any time. If either input index is
-	// invalid, GetControlPoint returns a vector whose components are all MAX_REAL.
+	/** Assigns new control point coordinate at the given index */
 	void		setControlPoint(const ci::ivec2& index, const ci::vec3& point);
+	/** Returns the existing control point coordinate at the given index, or a 2D MAX FLOAT if input is out of bounds. */
 	ci::vec3	getControlPoint(const ci::ivec2& index) const;
 		
-	/** */
+	/** 
+	 * Performs internal update of control points with input parameters.
+	 * 
+	 * @param ctrlPoints a rectangular grid of 3D points that serve as the control points for the patch
+	 * @param size the number of control points on each axis
+	 */
 	void		updateControlPoints(const std::vector<ci::vec3>& ctrlPoints, const ci::ivec2& size);
 	/** */
 	std::vector<ci::vec3>& getControlPoints() { return mControlPoints; }
@@ -73,19 +78,22 @@ public:
 	void		setKnot(const uint8_t dim, const uint32_t i, float knot);
 	float		getKnot(const uint8_t dim, const uint32_t i) const;
 
-	// The spline is defined for 0 <= u <= 1 and 0 <= v <= 1. The input
-	// values should be in this domain. Any inputs smaller than 0 are clamped
-	// to 0. Any inputs larger than 1 are clamped to 1.
+	/** returns the position of the patch at the input coordinate (u,v) of the domain [0,1]. */
 	ci::vec3	P(float u, float v) const;
+	/** returns the first derivative on the horizontal axis at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PU(float u, float v) const;
+	/** returns the first derivative on the vertical axis at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PV(float u, float v) const;
+	/** returns the second derivative on the horizontal axis at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PUU(float u, float v) const;
+	/** returns the first order partial derivative at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PUV(float u, float v) const;
+	/** returns the second derivative on the vertical axis at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PVV(float u, float v) const;
 	
 	// The parametric domain is rectangular for values (u,v).
 	// Valid (u,v) values for a rectangular domain satisfy:
-	//    umin <= u <= umax,  vmin <= v <= vmax
+	//  umin <= u <= umax,  vmin <= v <= vmax
 	inline float getUMin() const { return mDomainMin.s; }
 	inline float getUMax() const { return mDomainMax.s; }
 	inline float getVMin() const { return mDomainMin.t; }
@@ -137,13 +145,17 @@ public:
 	// Access the basis function to compute it without control points.
 	ci::BSplineBasis& getBasis(const uint8_t dim) { return mBasis[dim]; }
 	
-protected:	
-	// Replicate the necessary number of control points when the create
-	// function has bLoop equal to true, in which case the spline surface
-	// must be a closed surface in the corresponding dimension.
+protected:
+	/*
+	 * Copies input control points to internal structure. Replicates the necessary
+	 * control points for looping edges (closed edges). The size of the input vector
+	 * must match the expression: getNumControlPoints(0) * getNumControlPoints(1)
+	 *
+	 * @param ctrlPoints a rectangular grid of 3D points that serve as the control points for the patch
+	 */
 	void createControls(const std::vector<ci::vec3>& ctrlPoints);
 	
-	ci::vec2 mDomainMin, mDomainMax;
+	ci::vec2 mDomainMin, mDomainMax;		//!< Stores the domain over which the functions will be evaluated. Default: [0,1),[0,1)
 	
 	glm::bvec2 mLoop;						//!< Stores whether or not the basis function loops in either dimension
 	ci::ivec2 mReplicate;					//!< Stores whether or not the points are replicated in either dimension

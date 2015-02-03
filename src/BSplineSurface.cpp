@@ -17,7 +17,7 @@ using namespace ci;
 using namespace ci::geom;
 
 BSplineSurface::BSplineSurface(const BSplinePatch& patch, const ivec2& subdivisions )
-:	Source(), mPatch( patch )
+:	Source(), mPatch( patch ), mMinTexCoord(0,0), mMaxTexCoord(1,1)
 {
 	init( subdivisions );
 }
@@ -29,7 +29,6 @@ BSplineSurface&	BSplineSurface::texCoords( const vec2 &minCoord, const vec2 &max
 	
 	return *this;
 }
-
 
 uint8_t BSplineSurface::getAttribDims( Attrib attr ) const
 {
@@ -58,10 +57,19 @@ void BSplineSurface::loadInto( Target *target, const AttribSet &requestedAttribs
 	calculate( &positions, &normals, &tangents, &bitangents, &texcoords, &indices );
 
 	target->copyAttrib( Attrib::POSITION, 3, 0, value_ptr( *positions.data() ), positions.size() );
-	target->copyAttrib( Attrib::NORMAL, 3, 0, value_ptr( *normals.data() ), normals.size() );
-	target->copyAttrib( Attrib::TANGENT, 3, 0, value_ptr( *tangents.data() ), tangents.size() );
-	target->copyAttrib( Attrib::BITANGENT, 3, 0, value_ptr( *bitangents.data() ), bitangents.size() );
-	target->copyAttrib( Attrib::TEX_COORD_0, 2, 0, value_ptr( *texcoords.data() ), texcoords.size() );
+	
+	if( requestedAttribs.count( Attrib::NORMAL ) ) {
+		target->copyAttrib( Attrib::NORMAL, 3, 0, value_ptr( *normals.data() ), normals.size() );
+	}
+	if( requestedAttribs.count( Attrib::TANGENT ) ) {
+		target->copyAttrib( Attrib::TANGENT, 3, 0, value_ptr( *tangents.data() ), tangents.size() );
+	}
+	if( requestedAttribs.count( Attrib::BITANGENT ) ) {
+		target->copyAttrib( Attrib::BITANGENT, 3, 0, value_ptr( *bitangents.data() ), bitangents.size() );
+	}
+	if( requestedAttribs.count( Attrib::TEX_COORD_0 ) ) {
+		target->copyAttrib( Attrib::TEX_COORD_0, 2, 0, value_ptr( *texcoords.data() ), texcoords.size() );
+	}
 
 	target->copyIndices( Primitive::TRIANGLES, indices.data(), indices.size(), 1 );
 }
@@ -71,10 +79,10 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 							    vector<vec2> *texcoords, vector<uint32_t> *indices ) const
 {
 	positions->reserve( mNumVertices * sizeof(vec3) );
-	normals->reserve( mNumVertices * sizeof(vec3) );
-	tangents->reserve( mNumVertices * sizeof(vec3) );
-	bitangents->reserve( mNumVertices * sizeof(vec3) );
-	texcoords->reserve( mNumVertices * sizeof(vec2) );
+	if (normals) normals->reserve( mNumVertices * sizeof(vec3) );
+	if (tangents) tangents->reserve( mNumVertices * sizeof(vec3) );
+	if (bitangents) bitangents->reserve( mNumVertices * sizeof(vec3) );
+	if (texcoords) texcoords->reserve( mNumVertices * sizeof(vec2) );
 	indices->reserve( mNumVertices * sizeof(uint32_t) );
 	
 	// collect surface information
@@ -103,13 +111,16 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 			vec3 position, tan0, tan1, normal;
 			mPatch.getFrame(u, v, position, tan0, tan1, normal);
 			positions->emplace_back( position );
-			normals->emplace_back( normal * vec3(-1) );	// the triangle winding is wrong, requires inverse of normal
-			tangents->emplace_back( tan0 );
-			bitangents->emplace_back( tan1 );
+			
+			if (normals) normals->emplace_back( normal * vec3(-1) );	// the triangle winding is wrong, requires inverse of normal
+			if (tangents) tangents->emplace_back( tan0 );
+			if (bitangents) bitangents->emplace_back( tan1 );
 			
 			// add texture coordinate
-			vec2 tex_coord(mMinTexCoord.x + tuDelta * uIncr, mMinTexCoord.y + tvDelta * vIncr);
-			texcoords->emplace_back( tex_coord );
+			if (texcoords) {
+				vec2 tex_coord(mMinTexCoord.x + tuDelta * uIncr, mMinTexCoord.y + tvDelta * vIncr);
+				texcoords->emplace_back( tex_coord );
+			}
         }
     }
 	

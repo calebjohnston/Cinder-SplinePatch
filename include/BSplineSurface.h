@@ -10,16 +10,8 @@
 
 
 /**
- * @brief A surface object that generates a TriMesh from a ParametricSurface
- *
- * SurfaceTriMesh is an object that represents a TriMesh that is formed
- * and shaped by an external parametric surface. All modifications to
- * the parametric surface are reflected in the internally stored TriMesh
- * object via the updateSurface method. This class acts much like a CPU
- * dual to the SurfaceVboMesh -where updates are written directly to vbo.
- *
- * The updateSurface method and constructor will generate triangle
- * indices, vertices, normals, and texture coordinates.
+ * The BSplineSurface geometry source will generate a set of points, normals, texture coordinates,
+ * tangents, and bitangents for a given BSplinePatch and a mesh subdivision parameter.
  *
  * @see BSplinePatch
  */
