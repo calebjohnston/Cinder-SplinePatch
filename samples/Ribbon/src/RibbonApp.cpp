@@ -4,6 +4,7 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
+#include "cinder/gl/Batch.h"
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/VboMesh.h"
 #include "cinder/Color.h"
@@ -29,22 +30,27 @@ using namespace std;
 
 namespace cinder { namespace gl {
 
-void enableBackFaceCulling()
-{
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-}
+	void enableBackFaceCulling()
+	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
 
-void enableFrontFaceCulling()
-{
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-}
+	void enableFrontFaceCulling()
+	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+	}
 
-void disableCulling()
-{
-	glDisable(GL_CULL_FACE);
-}
+	void disableCulling()
+	{
+		glDisable(GL_CULL_FACE);
+	}
+	
+	void pointSize(float size)
+	{
+		glPointSize(size);
+	}
 	
 }
 
@@ -130,7 +136,6 @@ private:
 	int32_t					mSplineDegreeU;
 	int32_t					mSplineDegreeV;
 	int32_t					mCameraIndex;
-//	int32_t					mHullEdges;
 	params::InterfaceGlRef	mParams;
 
 	bool					mIsReady;
@@ -139,6 +144,7 @@ private:
 	std::vector<float>		mCtrlKnotsV;
 	ci::gl::VboMeshRef		mMesh;
 	ci::gl::GlslProgRef		mShader;
+	ci::gl::BatchRef		mMeshBatch;
 	
 	float					mKnot0;
 	float					mKnot1;
@@ -173,7 +179,6 @@ void RibbonApp::setup()
 	mDrawBezierPatch = false;
 	mDrawWireframe = true;
 	mPause = false;
-//	mHullEdges = 10;
 	mLaticeWidth = 8;
 	mLaticeLength = 20;
 	mDrawParams = true;
@@ -236,6 +241,7 @@ void RibbonApp::setup()
 	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
 	TriMeshRef surface = TriMesh::create( surfaceMesh );
 	mMesh = gl::VboMesh::create( *surface.get() );
+	mMeshBatch = gl::Batch::create( mMesh, mShader );
 	
 	vec3 center = surface->calcBoundingBox().getCenter();
 	mCam.setEyePoint(vec3(center.x, 0.0f, 20.0f));
@@ -263,12 +269,11 @@ void RibbonApp::setup()
 	mParams->addParam("enable backface culling", &mEnableBackfaceCulling);
 	mParams->addParam("use additive blending", &mEnableAdditiveBlending);
 	mParams->addParam("pause", &mPause);
-	//	mParams->addParam("total hull edges", &mHullEdges);
 	mParams->addParam("knot 0", &mKnot0);
 	mParams->addParam("knot 1", &mKnot1);
 	mParams->addParam("knot 2", &mKnot2);
-	mParams->addParam("latice width", &mLaticeWidth);
-	mParams->addParam("latice length", &mLaticeLength);
+	mParams->addParam("patch width", &mLaticeWidth);
+	mParams->addParam("patch length", &mLaticeLength);
 	mParams->addParam("mesh width", &mMeshWidth);
 	mParams->addParam("mesh length", &mMeshLength);
 	mParams->addParam("spline degree U", &mSplineDegreeU);
@@ -378,34 +383,6 @@ void RibbonApp::keyDown( KeyEvent event )
 			//mCam.setCenterOfInterestPoint(surfaceMesh.trimesh().calcBoundingBox().getCenter());
 			//mMayaCam.setCurrentCam(mCam);
 			break;
-
-//		case KeyEvent::KEY_UP:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.y += 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_DOWN:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.y -= 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_LEFT:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.x -= 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_RIGHT:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.x += 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
 		
 		default:
 			break;
@@ -430,6 +407,7 @@ void RibbonApp::update()
 	TriMeshRef surface = TriMesh::create( surfaceMesh );
 	//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
 	mMesh = gl::VboMesh::create( *surface.get() );
+	mMeshBatch = gl::Batch::create( mMesh, mShader );
 	
 	if (mCameraIndex == 1) {
 		mStaticCam.setEyePoint(mStaticCam_position);
@@ -461,32 +439,26 @@ void RibbonApp::draw()
 	
 	if (mEnableBackfaceCulling) gl::enableBackFaceCulling();
 	
-//	drawWorldFrame();
-	
-	if (mDrawWireframe) gl::enableWireframe();
+	if (mDrawWireframe) {
+		gl::enableWireframe();
+		gl::color(1,1,1,1);
+		gl::draw( mMesh );
+		gl::disableWireframe();
+	}
 	else if (mShader) {
-//		mShader->bind();
-//		mShader->uniform("lightPosition", vec4(mLightPosition,1.0f));
-//		mShader->uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
-//		mShader->uniform("alpha", mAlpha);
-//		mShader->uniform("ambientColor", mAmbientColor);
-//		mShader->uniform("diffuseColor", mDiffuseColor);
-//		mShader->uniform("specularColor", mSpecularColor);
+		mShader->uniform("lightPosition", vec4(mLightPosition,1.0f));
+		mShader->uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
+		mShader->uniform("alpha", mAlpha);
+		mShader->uniform("ambientColor", mAmbientColor);
+		mShader->uniform("diffuseColor", mDiffuseColor);
+		mShader->uniform("specularColor", mSpecularColor);
+		mMeshBatch->draw();
 	}
 	
-	gl::color(1,1,1,1);
-	gl::draw( mMesh );
-	
-	gl::disableWireframe();
-	
-	gl::disableCulling();
-	
-	if (!mDrawWireframe && mShader) {
-		//mShader->unbind();
-	}
+	if (mEnableBackfaceCulling) gl::disableCulling();
 	
 	if (mDrawBezierPatch) {
-		glPointSize(5.0f);
+		gl::pointSize(5.0f);
 		gl::begin(GL_POINTS);
 		gl::color(0,1,1,1);
 		uint32_t i,j;

@@ -50,5 +50,4 @@ protected:
 	uint32_t						mNumVertices;
 	ci::vec2						mMinTexCoord, mMaxTexCoord;
 
-
 };

@@ -1,5 +1,6 @@
-#include <time.h>
-
+#include <vector>
+#include <string>
+#include <functional>
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/norm.hpp"
@@ -99,9 +100,17 @@ public:
 	void draw();
 	
 private:
-	
 	void drawWorldFrame();
-	void generateControlPoints( const ivec2& size = ivec2(5), const vec2& scale = vec2(1) );
+	void updateSplineSurface();
+	void generateSplineSurface();
+	int generateControlPoints_plane( const ivec2& size = ivec2(5), const vec2& scale = vec2(1) );
+	int generateControlPoints_cylinder( float radius = 1.0f, float height = 2.0f, const ivec2& subd = ivec2(10,4) );
+	int generateControlPoints_cube( const ivec3& size = ivec3(2), const vec3& scale = vec3(2) );
+	
+	int32_t getPatchWidth();
+	void setPatchWidth(int32_t width);
+	int32_t getPatchLength();
+	void setPatchLength(int32_t length);
 	
 	CameraPersp				mCam;
 	MayaCamUI				mMayaCam;
@@ -135,7 +144,9 @@ private:
 	BSplinePatch			mBSplineRect;
 	std::vector<ci::vec3>	mCtrlPoints;
 	ci::vec3*				mSelectedCtrlPt;
-	ci::mat4				mMVP;
+
+	std::vector<std::string> mSplineModes;
+	int32_t					mSplineIndex;
 	
 	ci::gl::TextureRef		mTextureMap;
 	ci::gl::TextureRef		mNormalMap;
@@ -178,8 +189,8 @@ void BSplineTestApp::setup()
 	mLaticeLength = 5;
 	mMeshWidth = 30;
 	mMeshLength = 30;
-	mSplineDegreeU = 3;
-	mSplineDegreeV = 3;
+	mSplineDegreeU = 2;
+	mSplineDegreeV = 2;
 	mLoopU = false;
 	mLoopV = false;
 	mOpenU = true;
@@ -190,6 +201,8 @@ void BSplineTestApp::setup()
 	mSpecularColor = Color(216.0/255.0, 252.0/255.0, 238.0/255.0);
 	mClearColor = ColorA(8.0f/255.0, 26.0/255.0, 42.0/255.0, 1.0);
 	mLightPosition = vec3( 0, 10.0f, 0 );
+	mSplineModes = { "Plane", "Cylinder" };//, "Cube" };
+	mSplineIndex = 0;
 	
 	try {
 		mShader = gl::GlslProg::create(app::loadAsset(texturedPhongVertShader), app::loadAsset(texturedPhongFragShader));
@@ -203,12 +216,7 @@ void BSplineTestApp::setup()
 		console() << "Asset error: " << exc.what() << std::endl;
 	}
 	
-	// construct bspline mesh and batch
-	generateControlPoints( ivec2(mLaticeWidth, mLaticeLength) );
-	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
-	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
-	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
-	mRenderBatch = gl::Batch::create( surfaceMesh, mShader );
+	generateSplineSurface();
 	
 	// configure camera
 	mCam.setEyePoint( vec3( 4.40f, 2.75f, 5.75f ) );
@@ -220,13 +228,17 @@ void BSplineTestApp::setup()
 	// configure parameters
 	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
 	mParams->addParam("fps: ", &mFps);
+	mParams->addParam("Modes", mSplineModes, &mSplineIndex);
 	mParams->addSeparator();
 	mParams->addParam("draw bezier patch latice", &mDrawBezierPatch);
 	mParams->addParam("draw wireframe", &mDrawWireframe);
 	mParams->addParam("enable backface culling", &mEnableBackfaceCulling);
 	mParams->addParam("use additive blending", &mEnableAdditiveBlending);
-	mParams->addParam("latice width", &mLaticeWidth);
-	mParams->addParam("latice length", &mLaticeLength);
+	mParams->addParam("patch width", &mLaticeWidth);
+	mParams->addParam("patch length", &mLaticeLength);
+//	mParams->addParam("patch width", std::bind(&BSplineTestApp::setPatchWidth, this, std::placeholders::_1), std::bind(&BSplineTestApp::getPatchWidth, this));
+//	mParams->addParam("patch length", std::bind(&BSplineTestApp::setPatchLength, this, std::placeholders::_1), std::bind(&BSplineTestApp::getPatchLength, this));
+	mParams->addParam("patch length", &mLaticeLength);
 	mParams->addParam("mesh width", &mMeshWidth);
 	mParams->addParam("mesh length", &mMeshLength);
 	mParams->addParam("spline degree U", &mSplineDegreeU);
@@ -235,13 +247,6 @@ void BSplineTestApp::setup()
 	mParams->addParam("loop V", &mLoopV);
 	mParams->addParam("open U", &mOpenU);
 	mParams->addParam("open V", &mOpenV);
-	mParams->addSeparator();
-	mParams->addText("Shader parameters");
-	mParams->addParam("alpha transparency", (float*)&mAlpha, "min=0.0 max=1.0");
-	mParams->addParam("ambient color", &mAmbientColor);
-	mParams->addParam("diffuse color", &mDiffuseColor);
-	mParams->addParam("specular color", &mSpecularColor);
-	mParams->addParam("clear color", &mClearColor);
 	
 	gl::enableDepthRead();
 	gl::enableDepthWrite();
@@ -376,10 +381,28 @@ void BSplineTestApp::update()
 	
 	mFps = static_cast<int32_t>(math<float>::floor(app::App::get()->getAverageFps()));
 	
-	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
-	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
-	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
-	mRenderBatch = gl::Batch::create( mSurfaceMesh, mShader );
+	static uint32_t lastSplineIndex = 10;
+	static uint32_t lastPatchWidth = 0;
+	static uint32_t lastPatchLength = 0;
+	if (lastSplineIndex != mSplineIndex) {
+		generateSplineSurface();
+		lastSplineIndex = mSplineIndex;
+	}
+	else if (lastPatchWidth != mLaticeWidth ||
+			 lastPatchLength != mLaticeLength) {
+		generateSplineSurface();
+		lastPatchWidth = mLaticeWidth;
+		lastPatchLength = mLaticeLength;
+	}
+	else {
+		updateSplineSurface();
+	}
+	
+//	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+//	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+//	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
+//	mRenderBatch = gl::Batch::create( mSurfaceMesh, mShader );
+
 }
 
 void BSplineTestApp::draw()
@@ -426,20 +449,16 @@ void BSplineTestApp::draw()
 		gl::pointSize( 5.0f );
 		gl::begin( GL_POINTS );
 		gl::color( 0,1,1,1 );
-		uint32_t i,j;
-		for(i = 0; i != mLaticeWidth; ++i) {
-			for(j = 0; j != mLaticeLength; ++j) {
-				if (mSelectedCtrlPt == &mCtrlPoints[i * mLaticeLength + j]) {
-					gl::color( 1,0,0,1 );
-					gl::vertex( mCtrlPoints[i * mLaticeLength + j] );
-					gl::color( 0,1,1,1 );
-				}
-				else {
-					gl::vertex( mCtrlPoints[i * mLaticeLength + j] );
-				}
+		for (size_t i=0; i<mCtrlPoints.size(); i++) {
+			if (mSelectedCtrlPt == &mCtrlPoints[i]) {
+				gl::color( 1,0,0,1 );
+				gl::vertex( mCtrlPoints[i] );
+				gl::color( 0,1,1,1 );
 			}
-		}
-		
+			else {
+				gl::vertex( mCtrlPoints[i] );
+			}
+		}		
 		gl::end();
 	}
 	
@@ -480,7 +499,58 @@ void BSplineTestApp::drawWorldFrame()
 	gl::drawLine(vec3(0), vec3(0,0,s));
 }
 
-void BSplineTestApp::generateControlPoints( const ivec2& size, const vec2& scale )
+void BSplineTestApp::updateSplineSurface()
+{
+	// construct bspline mesh and batch
+	switch(mSplineIndex) {
+		case 0:	// plane
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+		case 1:	// cylinder
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+		case 2:	// cube
+		default:
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(2, 3), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+	}
+	
+	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
+	mRenderBatch = gl::Batch::create( surfaceMesh, mShader );
+}
+
+void BSplineTestApp::generateSplineSurface()
+{
+	// construct bspline mesh and batch
+	switch(mSplineIndex) {
+		case 0:	// plane
+			mOpenV = mOpenU = true;
+			mLoopV = mLoopU = false;
+			generateControlPoints_plane( ivec2(mLaticeWidth, mLaticeLength) );
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+		case 1:	// cylinder
+			mOpenU = mLoopV = false;
+			mOpenV = mLoopU = true;
+			generateControlPoints_cylinder( 1.0, 2.0, ivec2(mLaticeWidth, mLaticeLength) );
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+		case 2:	// cube
+		default:
+			mOpenV = mOpenU = false;
+			mLoopV = mLoopU = true;
+			generateControlPoints_cube();
+			mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(3, 2), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+			break;
+	}
+	
+	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
+	mRenderBatch = gl::Batch::create( surfaceMesh, mShader );
+}
+
+int BSplineTestApp::generateControlPoints_plane( const ivec2& size, const vec2& scale )
 {
 	mCtrlPoints.resize(size.x * size.y);
 	for (size_t i = 0; i < size.x; i++) {
@@ -488,6 +558,88 @@ void BSplineTestApp::generateControlPoints( const ivec2& size, const vec2& scale
 			mCtrlPoints[i * size.y + j] = vec3(i * scale.x, 0, j * scale.y);
 		}
 	}
+	
+	return mCtrlPoints.size();
 }
+
+int BSplineTestApp::generateControlPoints_cylinder( float radius, float height, const ivec2& subd )
+{
+	vec3 origin = vec3( 2.5, 0.0, 2.5 );
+	vec3 direction = vec3( 0, 1, 0 );
+	int mNumSegments = subd.s;
+	int mNumSlices = subd.t;
+	
+	const float segmentIncr = 1.0f / mNumSegments;
+	const float ringIncr = 1.0f / mNumSlices;
+	const quat axis( vec3( 0, 1, 0 ), direction );
+	
+	// vertex, normal, tex coord and color buffers
+	mCtrlPoints.clear();
+	mCtrlPoints.reserve(mNumSegments * mNumSlices);
+	for( size_t i = 0; i < mNumSegments; ++i ) {
+		for( size_t j = 0; j < mNumSlices; ++j ) {
+			float cosPhi = -ci::math<float>::cos( i * segmentIncr * float(M_PI * 2) );
+			float sinPhi =  ci::math<float>::sin( i * segmentIncr * float(M_PI * 2) );
+			float x = radius * cosPhi;
+			float y = height * j * ringIncr;
+			float z = radius * sinPhi;
+			
+			mCtrlPoints.emplace_back( origin + axis * vec3( x, y, z ) );
+		}
+	}
+	
+	return mCtrlPoints.size();
+}
+
+int BSplineTestApp::generateControlPoints_cube( const ivec3& size, const vec3& scale )
+{
+	mCtrlPoints.clear();
+	mCtrlPoints.resize(size.x * size.y * size.z);
+//	for (size_t i = 0; i < size.x; i++) {
+//		for (size_t j = 0; j < size.y; j++) {
+//			for (size_t k = 0; k < size.z; k++) {
+//				mCtrlPoints[i * size.y + j] = vec3(i * scale.x, 0, j * scale.y);
+//			}
+//		}
+//	}
+	
+	float x = scale.x;
+	float y = scale.y;
+	float z = scale.z;
+	mCtrlPoints[0] = vec3(0,  0,  0  );
+	mCtrlPoints[1] = vec3(0,  0,  z  );
+	mCtrlPoints[2] = vec3(x,  0,  0  );
+	mCtrlPoints[3] = vec3(x,  0,  z  );
+	
+	mCtrlPoints[4] = vec3(0,  y,  z  );
+	mCtrlPoints[5] = vec3(x,  y,  z  );
+	mCtrlPoints[6] = vec3(0,  y,  0  );
+	mCtrlPoints[7] = vec3(x,  y,  0  );
+	
+	return mCtrlPoints.size();
+}
+
+int32_t BSplineTestApp::getPatchWidth()
+{
+	return mLaticeWidth;
+}
+
+void BSplineTestApp::setPatchWidth(int32_t width)
+{
+	mLaticeWidth = width;
+	generateSplineSurface();
+}
+
+int32_t BSplineTestApp::getPatchLength()
+{
+	return mLaticeLength;
+}
+
+void BSplineTestApp::setPatchLength(int32_t length)
+{
+	mLaticeLength = length;
+	generateSplineSurface();
+}
+
 
 CINDER_APP_NATIVE( BSplineTestApp, RendererGl )
