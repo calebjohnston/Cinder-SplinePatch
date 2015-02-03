@@ -10,6 +10,8 @@
 #include <limits>
 
 #include "cinder/CinderAssert.h"
+#include "cinder/CinderGlm.h"
+#include "cinder/Log.h"
 
 #include "BSplinePatch.h"
 
@@ -35,20 +37,23 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 						   const glm::bvec2& loop, bool uOpen, bool vOpen)
 :	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(size.s >= 2);
-	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
-	CI_ASSERT(size.t >= 2);
-	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
 	mLoop[0] = loop.s;
     mLoop[1] = loop.t;
 	
     mNumCtrlPoints = size;
-    mReplicate.s = (loop.s ? (uOpen ? 1 : degree.s) : 0);
-    mReplicate.t = (loop.t ? (vOpen ? 1 : degree.t) : 0);
+    mReplicate.s = (loop.s ? (uOpen ? 1 : validDegree.s) : 0);
+    mReplicate.t = (loop.t ? (vOpen ? 1 : validDegree.t) : 0);
 	
-    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, degree.s, uOpen);
-    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, degree.t, vOpen);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, vOpen);
 	
     createControls(ctrlPoints);
 }
@@ -58,21 +63,24 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 						   const glm::bvec2& loop, bool uOpen, const std::vector<float>& vKnots)
 :	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(size.s >= 2);
-	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
-	CI_ASSERT(size.t >= 2);
-	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
-	CI_ASSERT(size.t - degree.t == vKnots.size());
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t - degree.t == vKnots.size(), "Knot vector must have (size - degree) elements." );
+	
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;
 	
     mNumCtrlPoints = size;
-    mReplicate.s = (loop.s ? (uOpen ? 1 : degree.s) : 0);
+    mReplicate.s = (loop.s ? (uOpen ? 1 : validDegree.s) : 0);
     mReplicate.t = (loop.t ? 1 : 0);
 	
-    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, degree.s, uOpen);
-    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, degree.t, &vKnots[0]);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, &vKnots[0]);
 	
     createControls(ctrlPoints);
 }
@@ -82,21 +90,24 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 						   const glm::bvec2& loop, const std::vector<float>& uKnots, bool vOpen)
 :	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(size.s >= 2);
-	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
-	CI_ASSERT(size.t >= 2);
-	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
-	CI_ASSERT(size.s - degree.s == uKnots.size());
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.s - degree.s == uKnots.size(), "Knot vector must have (size - degree) elements." );
+	
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;
 	
     mNumCtrlPoints = size;
     mReplicate.s = (loop.s ? 1 : 0);
-    mReplicate.t = (loop.t ? (vOpen ? 1 : degree.t) : 0);
+    mReplicate.t = (loop.t ? (vOpen ? 1 : validDegree.t) : 0);
 	
-    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, degree.s, &uKnots[0]);
-    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, degree.t, vOpen);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, &uKnots[0]);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, vOpen);
 	
     createControls(ctrlPoints);
 }
@@ -106,12 +117,15 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 						   const std::vector<float>& uKnots, const std::vector<float>& vKnots)
 :	mDomainMin(0), mDomainMax(1)
 {
-	CI_ASSERT(size.s >= 2);
-	CI_ASSERT(1 <= degree.s && degree.s <= size.s - 1);
-	CI_ASSERT(size.t >= 2);
-	CI_ASSERT(1 <= degree.t && degree.t <= size.t - 1);
-	CI_ASSERT(size.s - degree.s == uKnots.size());
-	CI_ASSERT(size.t - degree.t == vKnots.size());
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.s - degree.s == uKnots.size(), "Knot vector must have (size - degree) elements." );
+	CI_ASSERT_MSG( size.t - degree.t == vKnots.size(), "Knot vector must have (size - degree) elements." );
+	
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
     mLoop[0] = loop.s;
     mLoop[1] = loop.t;
@@ -120,8 +134,8 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
     mReplicate.s = (loop.s ? 1 : 0);
     mReplicate.t = (loop.t ? 1 : 0);
 	
-    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, degree.s, &uKnots[0]);
-    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, degree.t, &vKnots[0]);
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, &uKnots[0]);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, &vKnots[0]);
 	
     createControls(ctrlPoints);
 }
@@ -189,8 +203,7 @@ vec3 BSplinePatch::getControlPoint(const ci::ivec2& index) const
 void BSplinePatch::updateControlPoints(const std::vector<vec3>& ctrlPoints, const ci::ivec2& size)
 {
 	// NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID!
-	CI_ASSERT(size.s == mNumCtrlPoints.s);
-	CI_ASSERT(size.t == mNumCtrlPoints.t);
+	CI_ASSERT(size == mNumCtrlPoints);
 	
 	createControls(ctrlPoints);
 }
