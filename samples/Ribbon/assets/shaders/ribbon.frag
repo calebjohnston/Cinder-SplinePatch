@@ -17,9 +17,9 @@ void main() {
 	float nDotL = dot(normalVector, lightVector);
 	float magma = 1.0 - abs(dot(normalVector, eyeVector));
 
-//	vec3 halfVector = normalize(lightVector + eyeVector);
-//	float specular = pow( max( dot(normalVector, halfVector), 0.0), 24.0);
-//	light_color += (diffuseColor * nDotL) + (specularColor * specular);
+	vec3 halfVector = normalize(lightVector + eyeVector);
+	float specular = pow( max( dot(normalVector, halfVector), 0.0), 24.0);
+	light_color += (diffuseColor * nDotL) + (specularColor * specular);
 
 	FragColor = vec4(light_color.rgb, magma);
 }

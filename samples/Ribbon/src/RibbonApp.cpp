@@ -177,7 +177,7 @@ void RibbonApp::setup()
 	mEnableBackfaceCulling = false;
 	mEnableAdditiveBlending = true;
 	mDrawBezierPatch = false;
-	mDrawWireframe = true;
+	mDrawWireframe = false;
 	mPause = false;
 	mLaticeWidth = 8;
 	mLaticeLength = 20;
@@ -206,7 +206,7 @@ void RibbonApp::setup()
 	mTorsionXMin = -50.0f;
 	mTorsionXMax = 125.0f;
 	mTorsionXSpeed = 7.0f;
-	mTimeScale = 100.0f;
+	mTimeScale = 500.0f;
 	mAlpha = 0.6f;
 	mAmbientColor = Color(30.0/255.0, 80.0/255.0, 90.0/255.0);
 	mDiffuseColor = Color(56.0/255.0, 120.0/255.0, 110.0/255.0);
