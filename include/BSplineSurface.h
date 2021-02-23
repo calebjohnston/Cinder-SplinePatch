@@ -8,12 +8,12 @@
 
 #include "BSplinePatch.h"
 
-
 /**
- * The BSplineSurface geometry source will generate a set of points, normals, texture coordinates,
+ * @brief The BSplineSurface geometry source will generate a set of points, normals, texture coordinates,
  * tangents, and bitangents for a given BSplinePatch and a mesh subdivision parameter.
  *
  * @see BSplinePatch
+ * @see cinder::geom::Source
  */
 class BSplineSurface : public ci::geom::Source {
 public:
@@ -38,12 +38,12 @@ public:
 	Source*		clone() const override { return new BSplineSurface( mPatch, mSubdivisions ); }
 	
 protected:
-	// creates surface geometry
+	//! creates surface geometry using input vectors for positions, texture coordinates, indices, and a tangent space
 	void		calculate( std::vector<ci::vec3> *positions, std::vector<ci::vec3> *normals,
 						   std::vector<ci::vec3> *tangents, std::vector<ci::vec3> *bitangents,
 						   std::vector<ci::vec2> *texcoords, std::vector<uint32_t> *indices ) const;
 
-	// verify input patch and subdivision parameters + updates vert count
+	//! verify input patch and subdivision parameters and updates vertex count
 	void		init( const ci::ivec2& subdivisions );
 
 	const BSplinePatch*				mPatch;

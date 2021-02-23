@@ -1,5 +1,5 @@
 /**
- * Math portions copyright:
+ * Tensor calculations in computePrincipalCurvatureInfo method are sourced from:
  * Geometric Tools, LLC
  * Copyright (c) 1998-2010
  * Distributed under the Boost Software License, Version 1.0.
@@ -143,7 +143,7 @@ BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
 void BSplinePatch::createControls(const std::vector<vec3>& ctrlPoints)
 {
 	// NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID!
-	CI_ASSERT(ctrlPoints.size() == mNumCtrlPoints.s * mNumCtrlPoints.t);
+	CI_ASSERT_MSG(ctrlPoints.size() == mNumCtrlPoints.s * mNumCtrlPoints.t, "The implementation does not currently support resizing the control point grid.");
 	
     const uint32_t ctrlPtsRow = mNumCtrlPoints.s + mReplicate.s;
     const uint32_t ctrlPtsCol = mNumCtrlPoints.t + mReplicate.t;
@@ -203,7 +203,7 @@ vec3 BSplinePatch::getControlPoint(const ci::ivec2& index) const
 void BSplinePatch::updateControlPoints(const std::vector<vec3>& ctrlPoints, const ci::ivec2& size)
 {
 	// NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID!
-	CI_ASSERT(size == mNumCtrlPoints);
+	CI_ASSERT_MSG(size == mNumCtrlPoints, "The implementation does not currently support resizing the control point grid.");
 	
 	createControls(ctrlPoints);
 }

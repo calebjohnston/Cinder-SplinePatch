@@ -8,10 +8,16 @@
 #include "cinder/Vector.h"
 
 /**
- * @brief A surface defined by a 2D patch of BSplines
+ * @brief A surface defined by a 2D patch of BSplines. BSplinePatch is a parametric surface
+ * whose geometry is controlled by a topologically rectangular grid of spline points.
  *
- * BSplinePatch is a parametric surface whose geometry
- * is governed by a 2D rectangular grid of spline points.
+ * Spline types for curves are:
+ * 	- open uniform (OU)
+ *  - periodic uniform (PU)
+ *  - open non-uniform (ON)
+ * An "open" side means that the spline evaluation will be treated as a boundary at the edge
+ * A "periodic" side means that the spline evaluation will wrap around to the opposite side
+ * to form a continuous curve. The constructors reflect these edge type combinations.
  *
  * @see cinder::BSpline
  * @see BSplineSurface
@@ -20,30 +26,22 @@ class BSplinePatch {
 public:
 	BSplinePatch();
 	
-	// Spline types for curves are:
-	//    open uniform (OU)
-	//    periodic uniform (PU)
-	//    open non-uniform (ON)
-	// For tensor product surfaces, you have to choose a type for each of two
-	// dimensions, leading to nine possible spline types for surfaces. The
-	// constructors below represent these choices.
-	
-	// (OU,OU), (OU,PU), (PU,OU), or (PU,PU)
+	//! C'stor for (OU,OU), (OU,PU), (PU,OU), or (PU,PU)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
 				 const ci::ivec2& size, const ci::ivec2& degree,
 				 const glm::bvec2& loop, bool uOpen, bool vOpen);
 	
-	// (OU,ON) or (PU,ON)
+	//! C'stor for (OU,ON) or (PU,ON)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
 				 const ci::ivec2& size, const ci::ivec2& degree,
 				 const glm::bvec2& loop, bool uOpen, const std::vector<float>& vKnots);
 	
-	// (ON,OU) or (ON,PU)
+	//! C'stor for (ON,OU) or (ON,PU)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
 				 const ci::ivec2& size, const ci::ivec2& degree,
 				 const glm::bvec2& loop, const std::vector<float>& uKnots, bool vOpen);
 	
-	// (ON,ON)
+	//! C'stor for (ON,ON)
 	BSplinePatch(const std::vector<ci::vec3>& ctrlPoints,
 				 const ci::ivec2& size, const ci::ivec2& degree, const glm::bvec2& loop, 
 				 const std::vector<float>& uKnots, const std::vector<float>& vKnots);
@@ -57,9 +55,19 @@ public:
 	bool		isOpen(const uint8_t dim) const { return mBasis[dim].isOpen(); }
 	bool		isLoop(const uint8_t dim) const { return mLoop[dim]; }
 
-	/** Assigns new control point coordinate at the given index */
+	/**
+	 * Assigns new control point coordinate at the given index
+	 *
+	 * @param index the 2-dimensional index into the control point grid
+	 * @param point the updated control point
+	 */
 	void		setControlPoint(const ci::ivec2& index, const ci::vec3& point);
-	/** Returns the existing control point coordinate at the given index, or a 2D MAX FLOAT if input is out of bounds. */
+	
+	/**
+	 * Returns the existing control point coordinate at the given index, or a 2D MAX FLOAT if input is out of bounds.
+	 *
+	 * @param index the 2-dimensional index into the control point grid
+	 */
 	ci::vec3	getControlPoint(const ci::ivec2& index) const;
 		
 	/** 
@@ -69,12 +77,15 @@ public:
 	 * @param size the number of control points on each axis
 	 */
 	void		updateControlPoints(const std::vector<ci::vec3>& ctrlPoints, const ci::ivec2& size);
-	/** */
+	
+	/** returns a reference to the internal vector of control points */
 	std::vector<ci::vec3>& getControlPoints() { return mControlPoints; }
 
-	// The knot values can be changed only if the surface is nonuniform in the
-	// selected dimension and only if the input index is valid. If these
-	// conditions are not satisfied, GetKnot returns MAX_REAL.
+	/**
+	 * The knot values can be changed only if the surface is nonuniform in the
+	 * selected dimension and only if the input index is valid. If these
+	 * conditions are not satisfied, GetKnot returns MAX_REAL.
+	 */
 	void		setKnot(const uint8_t dim, const uint32_t i, float knot);
 	float		getKnot(const uint8_t dim, const uint32_t i) const;
 
@@ -91,9 +102,11 @@ public:
 	/** returns the second derivative on the vertical axis at the location (u,v) of the domain [0,1]. */
 	ci::vec3	PVV(float u, float v) const;
 	
-	// The parametric domain is rectangular for values (u,v).
-	// Valid (u,v) values for a rectangular domain satisfy:
-	//  umin <= u <= umax,  vmin <= v <= vmax
+	/**
+	 * The parametric domain is rectangular for values (u,v).
+	 * Valid (u,v) values for a rectangular domain satisfy:
+	 * 		umin <= u <= umax,  vmin <= v <= vmax
+	 */
 	inline float getUMin() const { return mDomainMin.s; }
 	inline float getUMax() const { return mDomainMax.s; }
 	inline float getVMin() const { return mDomainMin.t; }
@@ -104,7 +117,7 @@ public:
 	ci::vec3	position(float u, float v) const;
 	ci::vec3	normal(float u, float v) const;
 	
-	// Compute a coordinate frame. The set {T0,T1,N} is a right-handed orthonormal set.
+	//! Compute a coordinate frame. The set {T0,T1,N} is a right-handed orthonormal set.
 	void		getFrame(float u, float v, ci::vec3& position, ci::vec3& tangent0,
 				  ci::vec3& tangent1, ci::vec3& normal) const;
 	
@@ -142,7 +155,7 @@ public:
 	void get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV,
 					ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
 	
-	// Access the basis function to compute it without control points.
+	//! Access the basis function to compute it without control points.
 	ci::BSplineBasis& getBasis(const uint8_t dim) { return mBasis[dim]; }
 	
 protected:
