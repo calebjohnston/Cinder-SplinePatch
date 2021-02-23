@@ -18,7 +18,7 @@
 class BSplineSurface : public ci::geom::Source {
 public:
 	/** C'stors */
-	BSplineSurface( const BSplinePatch& patch, const ci::ivec2& subdivisions = ci::ivec2(10) );
+	BSplineSurface( const BSplinePatch* patch = nullptr, const ci::ivec2& subdivisions = ci::ivec2(10) );
 	
 	BSplineSurface&	texCoords( const ci::vec2 &minCoord, const ci::vec2 &maxCoord );
 	BSplineSurface&	subdivisions( const ci::ivec2 samples ) { init(samples); return *this; }
@@ -35,6 +35,7 @@ public:
 	uint8_t		getAttribDims( ci::geom::Attrib attr ) const override;
 	ci::geom::AttribSet	getAvailableAttribs() const override;
 	void		loadInto( ci::geom::Target *target, const ci::geom::AttribSet &requestedAttribs ) const override;
+	Source*		clone() const override { return new BSplineSurface( mPatch, mSubdivisions ); }
 	
 protected:
 	// creates surface geometry
@@ -45,7 +46,7 @@ protected:
 	// verify input patch and subdivision parameters + updates vert count
 	void		init( const ci::ivec2& subdivisions );
 
-	const BSplinePatch&				mPatch;
+	const BSplinePatch*				mPatch;
 	ci::ivec2						mSubdivisions;
 	uint32_t						mNumVertices;
 	ci::vec2						mMinTexCoord, mMaxTexCoord;

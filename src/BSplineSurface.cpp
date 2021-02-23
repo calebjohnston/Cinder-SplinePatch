@@ -16,7 +16,7 @@ using namespace std;
 using namespace ci;
 using namespace ci::geom;
 
-BSplineSurface::BSplineSurface(const BSplinePatch& patch, const ivec2& subdivisions )
+BSplineSurface::BSplineSurface(const BSplinePatch* patch, const ivec2& subdivisions )
 :	Source(), mPatch( patch ), mMinTexCoord(0,0), mMaxTexCoord(1,1)
 {
 	init( subdivisions );
@@ -78,6 +78,8 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 							    vector<vec3> *tangents, vector<vec3> *bitangents,
 							    vector<vec2> *texcoords, vector<uint32_t> *indices ) const
 {
+	CI_ASSERT_MSG( mPatch != nullptr, "The Bspline surface must be initialized with a Bspline patch." );
+	
 	positions->reserve( mNumVertices * sizeof(vec3) );
 	if (normals) normals->reserve( mNumVertices * sizeof(vec3) );
 	if (tangents) tangents->reserve( mNumVertices * sizeof(vec3) );
@@ -86,11 +88,11 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 	indices->reserve( mNumVertices * sizeof(uint32_t) );
 	
 	// collect surface information
-    float uMin = mPatch.getUMin();
-    float uRange = mPatch.getUMax() - uMin;
+    float uMin = mPatch->getUMin();
+    float uRange = mPatch->getUMax() - uMin;
     float uDelta = uRange / static_cast<float>(mSubdivisions.x - 1);
-    float vMin = mPatch.getVMin();
-    float vRange = mPatch.getVMax() - vMin;
+    float vMin = mPatch->getVMin();
+    float vRange = mPatch->getVMax() - vMin;
     float vDelta = vRange / static_cast<float>(mSubdivisions.y - 1);
 	
 	// compute texture coordinate deltas
@@ -109,7 +111,7 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 			
 			// add normal vector and vertex position
 			vec3 position, tan0, tan1, normal;
-			mPatch.getFrame(u, v, position, tan0, tan1, normal);
+			mPatch->getFrame(u, v, position, tan0, tan1, normal);
 			positions->emplace_back( position );
 			
 			if (normals) normals->emplace_back( normal * vec3(-1) );	// the triangle winding is wrong, requires inverse of normal

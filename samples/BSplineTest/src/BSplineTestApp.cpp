@@ -6,7 +6,7 @@
 #include "glm/gtx/norm.hpp"
 #include "glm/geometric.hpp"
 
-#include "cinder/app/AppNative.h"
+#include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
@@ -16,11 +16,12 @@
 #include "cinder/gl/VboMesh.h"
 #include "cinder/BSpline.h"
 #include "cinder/Camera.h"
+#include "cinder/CameraUi.h"
 #include "cinder/CinderGlm.h"
 #include "cinder/Color.h"
 #include "cinder/GeomIo.h"
 #include "cinder/ImageIo.h"
-#include "cinder/MayaCamUI.h"
+#include "cinder/Log.h"
 #include "cinder/Rand.h"
 #include "cinder/System.h"
 #include "cinder/TriMesh.h"
@@ -30,42 +31,16 @@
 #include "BSplinePatch.h"
 #include "BSplineSurface.h"
 
-const static std::string rockWallNormalsImage = "images/rockwall_normals.png";
-const static std::string rockWallImage = "images/rockwall.png";
-const static std::string stoneBrickNormalsImage = "images/stone_brick_normals.png";
-const static std::string stoneBrickWallImage = "images/stone_brick.png";
-const static std::string texturedPhongFragShader = "shaders/TexturedPhong.frag";
-const static std::string texturedPhongVertShader = "shaders/TexturedPhong.vert";
+const std::string rockWallNormalsImage = "images/rockwall_normals.png";
+const std::string rockWallImage = "images/rockwall.png";
+const std::string stoneBrickNormalsImage = "images/stone_brick_normals.png";
+const std::string stoneBrickWallImage = "images/stone_brick.png";
+const std::string texturedPhongFragShader = "shaders/TexturedPhong.frag";
+const std::string texturedPhongVertShader = "shaders/TexturedPhong.vert";
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
-
-namespace cinder { namespace gl {
-	
-	void enableBackFaceCulling()
-	{
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-	}
-	
-	void enableFrontFaceCulling()
-	{
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
-	}
-	
-	void disableCulling()
-	{
-		glDisable(GL_CULL_FACE);
-	}
-	
-	void pointSize(float size)
-	{
-		glPointSize(size);
-	}
-}
-}
 
 ci::vec2 objectToViewport( const ci::vec3& pt, const ci::mat4& composed, const ci::vec4& viewport )
 {
@@ -86,9 +61,8 @@ ci::vec2 objectToViewport( const ci::vec3& pt, const ci::mat4& composed, const c
 	return result;
 }
 
-class BSplineTestApp : public AppNative {
+class BSplineTestApp : public App {
 public:
-	void prepareSettings( AppBasic::Settings *settings );
 	void setup();
 	void mouseMove( MouseEvent event );
 	void mouseDown( MouseEvent event );
@@ -100,7 +74,6 @@ public:
 	void draw();
 	
 private:
-	void drawWorldFrame();
 	void updateSplineSurface();
 	void generateSplineSurface();
 	int generateControlPoints_plane( const ivec2& size = ivec2(5), const vec2& scale = vec2(1) );
@@ -113,8 +86,9 @@ private:
 	void setPatchLength(int32_t length);
 	
 	CameraPersp				mCam;
-	MayaCamUI				mMayaCam;
+	CameraUi				mMayaCam;
 	ivec2					mMousePos;
+	DisplayRef				mWindowDisplay;
 	
 	float					mFps;
 	bool					mIsMouseDown;
@@ -140,7 +114,7 @@ private:
 	int32_t					mSplineDegreeV;
 	params::InterfaceGlRef	mParams;
 	
-	bool					mIsReady;
+	bool					mIsReady = { false };
 	BSplinePatch			mBSplineRect;
 	std::vector<ci::vec3>	mCtrlPoints;
 	ci::vec3*				mSelectedCtrlPt;
@@ -155,27 +129,11 @@ private:
 	ci::gl::GlslProgRef		mShader;
 };
 
-void BSplineTestApp::prepareSettings( Settings *settings )
-{
-	mIsReady = false;
-	
-	settings->setWindowSize(1600, 1080);
-	settings->setFrameRate(60);
-	settings->setTitle("BSplineTestApp");
-	
-	// seed random number generators
-	srand(time(NULL));
-	Rand::randSeed(time(NULL));
-}
-
 void BSplineTestApp::setup()
 {
-	// Add Mac resource paths...
-	fs::path path;
-	path = this->getAppPath() / ".." / ".." / ".." / ".." / "assets";
-	this->addAssetDirectory(path);
-	
-	this->getWindow()->getSignalResize().connect(std::bind(&BSplineTestApp::resize, this));
+	getWindow()->getSignalResize().connect(std::bind(&BSplineTestApp::resize, this));
+	getWindow()->getSignalDisplayChange().connect(std::bind(&BSplineTestApp::resize, this));
+	mWindowDisplay = getWindow()->getDisplay();
 	
 	mSelectedCtrlPt = nullptr;
 	
@@ -213,17 +171,17 @@ void BSplineTestApp::setup()
 		mNormalMap = gl::Texture::create( ci::loadImage( app::loadAsset(rockWallNormalsImage) ), txtfmt );
 	}
 	catch ( Exception& exc ) {
-		console() << "Asset error: " << exc.what() << std::endl;
+		CI_LOG_W( "Asset error: " << exc.what() );
 	}
 	
 	generateSplineSurface();
 	
 	// configure camera
 	mCam.setEyePoint( vec3( 4.40f, 2.75f, 5.75f ) );
-	mCam.setCenterOfInterestPoint( vec3( 2.5f, 0, 2.5f ) );
+	mCam.lookAt( vec3( 2.5f, 0, 2.5f ) );
 	mCam.setWorldUp( vec3( 0, 1, 0 ) );
 	mCam.setPerspective(60.0f, getWindowAspectRatio(), 1.0f, 1000.0f);
-	mMayaCam.setCurrentCam(mCam);
+	mMayaCam.setCamera(&mCam);
 	
 	// configure parameters
 	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
@@ -336,7 +294,7 @@ void BSplineTestApp::mouseDown( MouseEvent event )
 void BSplineTestApp::resize()
 {
 	mCam.setAspectRatio( getWindowAspectRatio() );
-	mMayaCam.setCurrentCam(mCam);
+	mMayaCam.setCamera(&mCam);
 }
 
 void BSplineTestApp::keyDown( KeyEvent event )
@@ -361,15 +319,6 @@ void BSplineTestApp::keyDown( KeyEvent event )
 			if (mSelectedCtrlPt) mSelectedCtrlPt->z += 0.1f;
 			break;
 			
-		case KeyEvent::KEY_p:
-			{
-				mat4 view = mMayaCam.getCamera().getViewMatrix();
-				mat4 projection = mMayaCam.getCamera().getProjectionMatrix();
-				console() << "view: " << view << std::endl;
-				console() << "projection: " << projection << std::endl;
-			}
-			break;
-			
 		default:
 			break;
 	}
@@ -378,6 +327,14 @@ void BSplineTestApp::keyDown( KeyEvent event )
 void BSplineTestApp::update()
 {
 	if (!mIsReady) return;
+	
+	if (getWindow()->getDisplay() != mWindowDisplay) {
+		mWindowDisplay = getWindow()->getDisplay();
+		// HACK: this is required since MacOS Catalina due to a change in how OSX reports the display content scaling, sadly
+		ivec2 size = getWindowSize();
+		setWindowSize(size.x, size.y-1);
+		setWindowSize(size.x, size.y);
+	}
 	
 	mFps = static_cast<int32_t>(math<float>::floor(app::App::get()->getAverageFps()));
 	
@@ -397,12 +354,6 @@ void BSplineTestApp::update()
 	else {
 		updateSplineSurface();
 	}
-	
-//	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
-//	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
-//	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
-//	mRenderBatch = gl::Batch::create( mSurfaceMesh, mShader );
-
 }
 
 void BSplineTestApp::draw()
@@ -421,10 +372,11 @@ void BSplineTestApp::draw()
 	gl::pushMatrices();
 	gl::setMatrices( mMayaCam.getCamera() );
 	
-	drawWorldFrame();
+	gl::drawCoordinateFrame();
 	
 	if (mEnableBackfaceCulling) {
-		gl::enableBackFaceCulling();
+		gl::enableFaceCulling();
+		gl::cullFace(GL_BACK);
 	}
 	
 	if (mDrawWireframe) {
@@ -442,7 +394,7 @@ void BSplineTestApp::draw()
 	}
 	
 	if (mEnableBackfaceCulling) {
-		gl::disableCulling();
+		gl::enableFaceCulling( false );
 	}
 	
 	if (mDrawBezierPatch) {
@@ -488,17 +440,6 @@ void BSplineTestApp::draw()
 	mParams->draw();
 }
 
-void BSplineTestApp::drawWorldFrame()
-{
-	float s = 1.0f;
-	gl::color(1,0,0,1);
-	gl::drawLine(vec3(0), vec3(s,0,0));
-	gl::color(0,1,0,1);
-	gl::drawLine(vec3(0), vec3(0,s,0));
-	gl::color(0,0,1,1);
-	gl::drawLine(vec3(0), vec3(0,0,s));
-}
-
 void BSplineTestApp::updateSplineSurface()
 {
 	// construct bspline mesh and batch
@@ -515,7 +456,7 @@ void BSplineTestApp::updateSplineSurface()
 			break;
 	}
 	
-	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	BSplineSurface surfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
 	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
 	mRenderBatch = gl::Batch::create( surfaceMesh, mShader );
 }
@@ -545,7 +486,7 @@ void BSplineTestApp::generateSplineSurface()
 			break;
 	}
 	
-	BSplineSurface surfaceMesh = BSplineSurface( mBSplineRect, ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	BSplineSurface surfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
 	mSurfaceMesh = gl::VboMesh::create( surfaceMesh );
 	mRenderBatch = gl::Batch::create( surfaceMesh, mShader );
 }
@@ -593,6 +534,8 @@ int BSplineTestApp::generateControlPoints_cylinder( float radius, float height, 
 
 int BSplineTestApp::generateControlPoints_cube( const ivec3& size, const vec3& scale )
 {
+	CI_ASSERT_MSG( false, "Cube primitive not yet supported" );
+	
 	mCtrlPoints.clear();
 	mCtrlPoints.resize(size.x * size.y * size.z);
 //	for (size_t i = 0; i < size.x; i++) {
@@ -641,5 +584,15 @@ void BSplineTestApp::setPatchLength(int32_t length)
 	generateSplineSurface();
 }
 
-
-CINDER_APP_NATIVE( BSplineTestApp, RendererGl )
+CINDER_APP( BSplineTestApp, RendererGl(),
+[&]( App::Settings *settings ) {
+	settings->setDisplay(Display::getMainDisplay());
+	settings->setHighDensityDisplayEnabled( false );
+	settings->setWindowSize(1600, 1080);
+	settings->setFrameRate(60);
+	settings->setTitle("BSplineTestApp");
+	
+	// seed random number generators
+	srand(time(NULL));
+	Rand::randSeed(time(NULL));
+})
