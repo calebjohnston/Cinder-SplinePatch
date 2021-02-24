@@ -3,6 +3,7 @@
 
 #include "cinder/Vector.h"
 #include "cinder/CinderAssert.h"
+#include "cinder/CinderGlm.h"
 
 #include "BSplineSurface.h"
 

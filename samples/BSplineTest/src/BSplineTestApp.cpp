@@ -91,6 +91,7 @@ private:
 	DisplayRef				mWindowDisplay;
 	
 	float					mFps;
+	bool					mDrawParams;
 	bool					mIsMouseDown;
 	bool					mDrawBezierPatch;
 	bool					mDrawWireframe;
@@ -139,6 +140,7 @@ void BSplineTestApp::setup()
 	
 	// initialize application data
 	mFps = 0.0;
+	mDrawParams = true;
 	mEnableBackfaceCulling = false;
 	mEnableAdditiveBlending = false;
 	mDrawBezierPatch = true;
@@ -221,7 +223,7 @@ void BSplineTestApp::mouseDrag( MouseEvent event )
 {
 	mMousePos = event.getPos();
 	
-	if (event.isMetaDown()) {
+	if (event.isControlDown()) {
 		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
 	}
 	else if (event.isAltDown()) {
@@ -265,7 +267,7 @@ void BSplineTestApp::mouseDown( MouseEvent event )
 	
 	mMousePos = event.getPos();
 	
-	if (event.isMetaDown()) {
+	if (event.isControlDown()) {
 		mMayaCam.mouseDown( mMousePos );
 	}
 	else {
@@ -299,7 +301,8 @@ void BSplineTestApp::resize()
 
 void BSplineTestApp::keyDown( KeyEvent event )
 {
-	if (event.isMetaDown() && event.getCode() == KeyEvent::KEY_w) this->quit();
+	if (event.isControlDown() && event.getCode() == KeyEvent::KEY_w)
+		this->quit();
 	
 	switch(event.getCode()){
 		case KeyEvent::KEY_f:
@@ -317,6 +320,10 @@ void BSplineTestApp::keyDown( KeyEvent event )
 			break;
 		case KeyEvent::KEY_RIGHT:
 			if (mSelectedCtrlPt) mSelectedCtrlPt->z += 0.1f;
+			break;
+
+		case KeyEvent::KEY_p:
+			mDrawParams = !mDrawParams;
 			break;
 			
 		default:
@@ -437,7 +444,8 @@ void BSplineTestApp::draw()
 		gl::color( 1,1,1,1 );
 	}
 	
-	mParams->draw();
+	if (mDrawParams) 
+		mParams->draw();
 }
 
 void BSplineTestApp::updateSplineSurface()

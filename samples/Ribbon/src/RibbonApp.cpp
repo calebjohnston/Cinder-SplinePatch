@@ -452,9 +452,8 @@ void RibbonApp::draw()
 	}
 	gl::popMatrices();
 
-	if (mDrawParams) {
+	if (mDrawParams)
 		mParams->draw();
-	}
 }
 
 void RibbonApp::drawWorldFrame()

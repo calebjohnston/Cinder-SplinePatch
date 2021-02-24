@@ -12,6 +12,7 @@
 #include "cinder/CinderAssert.h"
 #include "cinder/CinderGlm.h"
 #include "cinder/Log.h"
+#include "cinder/Matrix.h"
 
 #include "BSplinePatch.h"
 

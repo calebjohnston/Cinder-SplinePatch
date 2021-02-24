@@ -13,11 +13,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="Source Files\splines">
-      <UniqueIdentifier>{0d5b4107-0809-4ada-9aae-b593beac1a95}</UniqueIdentifier>
+    <Filter Include="Blocks">
+      <UniqueIdentifier>{d37d8d3a-149d-4a77-9379-02a540443a5f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\splines">
-      <UniqueIdentifier>{39e8f9df-5e6a-4d68-902e-2fb940dc8327}</UniqueIdentifier>
+    <Filter Include="Blocks\BSplinePatch">
+      <UniqueIdentifier>{9edf2fc8-debf-47e9-97b1-7734c3512f1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\BSplinePatch\src">
+      <UniqueIdentifier>{1d8d3c01-69c0-4d3d-85d6-bbc328918d24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Blocks\BSplinePatch\include">
+      <UniqueIdentifier>{f11f3ccc-f78a-4df6-886e-f3af1cd3822c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -25,19 +31,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\BSplinePatch.cpp">
-      <Filter>Source Files\splines</Filter>
+      <Filter>Blocks\BSplinePatch\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\NurbsPatch.cpp">
-      <Filter>Source Files\splines</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\ParametricSurface.cpp">
-      <Filter>Source Files\splines</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\SurfaceTriMesh.cpp">
-      <Filter>Source Files\splines</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\SurfaceVboMesh.cpp">
-      <Filter>Source Files\splines</Filter>
+    <ClCompile Include="..\..\..\src\BSplineSurface.cpp">
+      <Filter>Blocks\BSplinePatch\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -47,20 +44,11 @@
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\BSplineSurface.h">
+      <Filter>Blocks\BSplinePatch\include</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\BSplinePatch.h">
-      <Filter>Header Files\splines</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\NurbsPatch.h">
-      <Filter>Header Files\splines</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\ParametricSurface.h">
-      <Filter>Header Files\splines</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\SurfaceTriMesh.h">
-      <Filter>Header Files\splines</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\SurfaceVboMesh.h">
-      <Filter>Header Files\splines</Filter>
+      <Filter>Blocks\BSplinePatch\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
