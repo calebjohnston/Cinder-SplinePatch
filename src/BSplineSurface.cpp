@@ -81,28 +81,28 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 	if (bitangents) bitangents->reserve( mNumVertices * sizeof(vec3) );
 	if (texcoords) texcoords->reserve( mNumVertices * sizeof(vec2) );
 	indices->reserve( mNumVertices * sizeof(uint32_t) );
-	
+
 	// collect surface information
-    float uMin = mPatch->getUMin();
-    float uRange = mPatch->getUMax() - uMin;
-    float uDelta = uRange / static_cast<float>(mSubdivisions.x - 1);
-    float vMin = mPatch->getVMin();
-    float vRange = mPatch->getVMax() - vMin;
-    float vDelta = vRange / static_cast<float>(mSubdivisions.y - 1);
-	
+	float uMin = mPatch->getUMin();
+	float uRange = mPatch->getUMax() - uMin;
+	float uDelta = uRange / static_cast<float>(mSubdivisions.x - 1);
+	float vMin = mPatch->getVMin();
+	float vRange = mPatch->getVMax() - vMin;
+	float vDelta = vRange / static_cast<float>(mSubdivisions.y - 1);
+
 	// compute texture coordinate deltas
-    float tuDelta = 0.0f, tvDelta = 0.0f;
+	float tuDelta = 0.0f, tvDelta = 0.0f;
 	tuDelta = (mMaxTexCoord.x - mMinTexCoord.x) / uRange;
 	tvDelta = (mMaxTexCoord.y - mMinTexCoord.y) / vRange;
 	
 	// set vertex positions, normals, and texture coordinates within buffer
-    uint32_t uIndex, vIndex, i;
-    for (uIndex = 0, i = 0; uIndex < mSubdivisions.x; ++uIndex) {
-        float uIncr = uDelta*uIndex;
-        float u = uMin + uIncr;
-        for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i) {
-            float vIncr = vDelta*vIndex;
-            float v = vMin + vIncr;
+	uint32_t uIndex, vIndex, i;
+	for (uIndex = 0, i = 0; uIndex < mSubdivisions.x; ++uIndex) {
+		float uIncr = uDelta*uIndex;
+		float u = uMin + uIncr;
+		for (vIndex = 0; vIndex < mSubdivisions.y; ++vIndex, ++i) {
+			float vIncr = vDelta*vIndex;
+			float v = vMin + vIncr;
 			
 			// add normal vector and vertex position
 			vec3 position, tan0, tan1, normal;
@@ -118,9 +118,9 @@ void BSplineSurface::calculate( vector<vec3> *positions, vector<vec3> *normals,
 				vec2 tex_coord(mMinTexCoord.x + tuDelta * uIncr, mMinTexCoord.y + tvDelta * vIncr);
 				texcoords->emplace_back( tex_coord );
 			}
-        }
-    }
-	
+		}
+	}
+
 	// set the index buffer values
 	int i0,i1,i2,i3;
 	for (uIndex = 0, i = 0; uIndex < mSubdivisions.x - 1; ++uIndex) {

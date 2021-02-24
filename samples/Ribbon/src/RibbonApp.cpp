@@ -199,8 +199,10 @@ void RibbonApp::setup()
 	
 	this->updateSplinePatch();
 	this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
+	
 	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
 	mSurfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	
 	TriMeshRef surface = TriMesh::create( mSurfaceMesh );
 	mMesh = gl::VboMesh::create( *surface.get() );
 	mMeshBatch = gl::Batch::create( mMesh, mShader );
@@ -219,7 +221,6 @@ void RibbonApp::setup()
 	mStaticCam.setViewDirection(mStaticCam_direction);
 	
 	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
-//	mParams.setOptions("", "");
 	mParams->addParam("fps: ", &mFps);
 	
 	vector<string> cameras;
@@ -378,12 +379,10 @@ void RibbonApp::update()
 		this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
 	}
 	
-	//mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
 	mBSplineRect.updateControlPoints( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength) );
-	//mBSplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
 	mSurfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	
 	TriMeshRef surface = TriMesh::create( mSurfaceMesh );
-	//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
 	mMesh = gl::VboMesh::create( *surface.get() );
 	mMeshBatch = gl::Batch::create( mMesh, mShader );
 	

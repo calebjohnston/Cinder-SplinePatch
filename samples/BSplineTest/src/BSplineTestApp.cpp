@@ -196,8 +196,6 @@ void BSplineTestApp::setup()
 	mParams->addParam("use additive blending", &mEnableAdditiveBlending);
 	mParams->addParam("patch width", &mLaticeWidth);
 	mParams->addParam("patch length", &mLaticeLength);
-//	mParams->addParam("patch width", std::bind(&BSplineTestApp::setPatchWidth, this, std::placeholders::_1), std::bind(&BSplineTestApp::getPatchWidth, this));
-//	mParams->addParam("patch length", std::bind(&BSplineTestApp::setPatchLength, this, std::placeholders::_1), std::bind(&BSplineTestApp::getPatchLength, this));
 	mParams->addParam("patch length", &mLaticeLength);
 	mParams->addParam("mesh width", &mMeshWidth);
 	mParams->addParam("mesh length", &mMeshLength);

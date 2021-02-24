@@ -119,7 +119,7 @@ public:
 	
 	//! Compute a coordinate frame. The set {T0,T1,N} is a right-handed orthonormal set.
 	void		getFrame(float u, float v, ci::vec3& position, ci::vec3& tangent0,
-				  ci::vec3& tangent1, ci::vec3& normal) const;
+						 ci::vec3& tangent1, ci::vec3& normal) const;
 	
 	/**
 	 * Computes differential geometric quantities. The returned scalars are
@@ -134,7 +134,7 @@ public:
 	 * @param direction1
 	 */
 	void computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1,
-											  ci::vec3& direction0, ci::vec3& direction1);
+									   ci::vec3& direction0, ci::vec3& direction1);
 	
 	/**
 	 * Returns the position and derivatives in the parameter list for the
@@ -153,7 +153,7 @@ public:
 	 * @param derVV the second derivative on the vertical axis at the location (u,v)
 	 */
 	void get(float u, float v, ci::vec3* pos, ci::vec3* derU, ci::vec3* derV,
-					ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
+			 ci::vec3* derUU, ci::vec3* derUV, ci::vec3* derVV) const;
 	
 	//! Access the basis function to compute it without control points.
 	ci::BSplineBasis& getBasis(const uint8_t dim) { return mBasis[dim]; }
