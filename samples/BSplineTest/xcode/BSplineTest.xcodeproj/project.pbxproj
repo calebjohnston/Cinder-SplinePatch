@@ -7,55 +7,55 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		006D720419952D00008149E2 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 006D720219952D00008149E2 /* AVFoundation.framework */; };
+		006D720519952D00008149E2 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 006D720319952D00008149E2 /* CoreMedia.framework */; };
 		0091D8F90E81B9330029341E /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0091D8F80E81B9330029341E /* OpenGL.framework */; };
 		00B784B30FF439BC000DE1D7 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784AF0FF439BC000DE1D7 /* Accelerate.framework */; };
 		00B784B40FF439BC000DE1D7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */; };
 		00B784B50FF439BC000DE1D7 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B10FF439BC000DE1D7 /* AudioUnit.framework */; };
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
-		3C57989425E5511500CE9FBC /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C57989325E5511500CE9FBC /* IOKit.framework */; };
-		3C57989625E5511C00CE9FBC /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C57989525E5511C00CE9FBC /* IOSurface.framework */; };
-		3CA4675E1A808ACB0052AFF9 /* ribbon.frag in Sources */ = {isa = PBXBuildFile; fileRef = 3CA4675C1A808ACB0052AFF9 /* ribbon.frag */; };
-		3CA4675F1A808ACB0052AFF9 /* ribbon.vert in Sources */ = {isa = PBXBuildFile; fileRef = 3CA4675D1A808ACB0052AFF9 /* ribbon.vert */; };
-		3CAF5760B5E049F9A912CB15 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4E20FCF86A714235AE15D580 /* CinderApp.icns */; };
-		3CE34D961A7C212500A54164 /* BSplineSurface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90A17AAC57E00832470 /* BSplineSurface.cpp */; };
-		3CE34D981A7C48FC00A54164 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CE34D971A7C48FC00A54164 /* AVFoundation.framework */; };
-		3CE34D9A1A7C493700A54164 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CE34D991A7C493700A54164 /* CoreMedia.framework */; };
-		4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4165C90717AAC57E00832470 /* BSplinePatch.cpp */; };
+		3C57989E25E55C5500CE9FBC /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C57989D25E55C5500CE9FBC /* IOKit.framework */; };
+		3C5798A025E55C5C00CE9FBC /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C57989F25E55C5C00CE9FBC /* IOSurface.framework */; };
+		3C728B491A7DA01800532D27 /* TexturedPhong.frag in Sources */ = {isa = PBXBuildFile; fileRef = 3C728B471A7DA01800532D27 /* TexturedPhong.frag */; };
+		3C728B4A1A7DA01800532D27 /* TexturedPhong.vert in Sources */ = {isa = PBXBuildFile; fileRef = 3C728B481A7DA01800532D27 /* TexturedPhong.vert */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
+		6374F0F1141F4510A7F3C15C /* BSplineSurface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 902D83FE284541EA9987163E /* BSplineSurface.cpp */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		AEBCFF89618E4D0CB0CEBD49 /* RibbonApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0EE12B8EB9134483BB9A1BD0 /* RibbonApp.cpp */; };
+		942924B3B689454D8BED0823 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = ED5554067A044D9A871F681B /* CinderApp.icns */; };
+		BD0A4412DB97449BB911DA0F /* BSplinePatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2E062953F4E24332AD356029 /* BSplinePatch.cpp */; };
+		D6C05934615E43C0820F1A65 /* BSplineTestApp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B5889BF0550F426E85038912 /* BSplineTestApp.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		006D720219952D00008149E2 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		006D720319952D00008149E2 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		0091D8F80E81B9330029341E /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		00B784AF0FF439BC000DE1D7 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		00B784B10FF439BC000DE1D7 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		00B784B20FF439BC000DE1D7 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		0EE12B8EB9134483BB9A1BD0 /* RibbonApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = RibbonApp.cpp; path = ../src/RibbonApp.cpp; sourceTree = "<group>"; };
+		012C1F1EBA6F48E7BAC1CA5A /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		3C57989125E550FB00CE9FBC /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		3C57989225E550FD00CE9FBC /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		3C57989325E5511500CE9FBC /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		3C57989525E5511C00CE9FBC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
-		3CA4675C1A808ACB0052AFF9 /* ribbon.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ribbon.frag; sourceTree = "<group>"; };
-		3CA4675D1A808ACB0052AFF9 /* ribbon.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = ribbon.vert; sourceTree = "<group>"; };
-		3CE34D971A7C48FC00A54164 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		3CE34D991A7C493700A54164 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
-		4165C90717AAC57E00832470 /* BSplinePatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSplinePatch.cpp; path = ../../../src/BSplinePatch.cpp; sourceTree = "<group>"; };
-		4165C90A17AAC57E00832470 /* BSplineSurface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BSplineSurface.cpp; path = ../../../src/BSplineSurface.cpp; sourceTree = "<group>"; };
-		4165C91217AAC59500832470 /* BSplinePatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSplinePatch.h; path = ../../../include/BSplinePatch.h; sourceTree = "<group>"; };
-		4165C91517AAC59500832470 /* BSplineSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BSplineSurface.h; path = ../../../include/BSplineSurface.h; sourceTree = "<group>"; };
-		4E20FCF86A714235AE15D580 /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
+		2E062953F4E24332AD356029 /* BSplinePatch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = BSplinePatch.cpp; path = ../../../src/BSplinePatch.cpp; sourceTree = "<group>"; };
+		3C57989D25E55C5500CE9FBC /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		3C57989F25E55C5C00CE9FBC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		3C5798A125E55C6200CE9FBC /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		3C5798A225E55C6400CE9FBC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		3C728B441A7D7B2700532D27 /* BSplinePatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSplinePatch.h; sourceTree = "<group>"; };
+		3C728B451A7D7B2700532D27 /* BSplineSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BSplineSurface.h; sourceTree = "<group>"; };
+		3C728B471A7DA01800532D27 /* TexturedPhong.frag */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TexturedPhong.frag; sourceTree = "<group>"; };
+		3C728B481A7DA01800532D27 /* TexturedPhong.vert */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = TexturedPhong.vert; sourceTree = "<group>"; };
+		4CE6C19C1F9F4FC0A9CE1F01 /* BSplineTest_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = BSplineTest_Prefix.pch; sourceTree = "<group>"; };
+		4F579E416B7542EE8F42B2C8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
-		8D1107320486CEB800E47090 /* Ribbon.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ribbon.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		9662766EE27C4D7684310A9F /* Ribbon_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = "\"\""; path = Ribbon_Prefix.pch; sourceTree = "<group>"; };
-		B042F03B65C3408FB797609D /* Resources.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Resources.h; path = ../include/Resources.h; sourceTree = "<group>"; };
-		CCBB289949D94204964E54E6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8D1107320486CEB800E47090 /* BSplineTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BSplineTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		902D83FE284541EA9987163E /* BSplineSurface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = BSplineSurface.cpp; path = ../../../src/BSplineSurface.cpp; sourceTree = "<group>"; };
+		B5889BF0550F426E85038912 /* BSplineTestApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.cpp; name = BSplineTestApp.cpp; path = ../src/BSplineTestApp.cpp; sourceTree = "<group>"; };
+		ED5554067A044D9A871F681B /* CinderApp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = CinderApp.icns; path = ../resources/CinderApp.icns; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,12 +63,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3C57989625E5511C00CE9FBC /* IOSurface.framework in Frameworks */,
-				3CE34D9A1A7C493700A54164 /* CoreMedia.framework in Frameworks */,
-				3CE34D981A7C48FC00A54164 /* AVFoundation.framework in Frameworks */,
+				3C5798A025E55C5C00CE9FBC /* IOSurface.framework in Frameworks */,
+				006D720419952D00008149E2 /* AVFoundation.framework in Frameworks */,
+				006D720519952D00008149E2 /* CoreMedia.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				0091D8F90E81B9330029341E /* OpenGL.framework in Frameworks */,
-				3C57989425E5511500CE9FBC /* IOKit.framework in Frameworks */,
+				3C57989E25E55C5500CE9FBC /* IOKit.framework in Frameworks */,
 				5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */,
 				5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */,
 				00B784B30FF439BC000DE1D7 /* Accelerate.framework in Frameworks */,
@@ -84,7 +84,7 @@
 		01B97315FEAEA392516A2CEA /* Blocks */ = {
 			isa = PBXGroup;
 			children = (
-				4165C90617AAC56400832470 /* BSplinePatch */,
+				41971743CE4141938676700A /* BSlinePatch */,
 			);
 			name = Blocks;
 			sourceTree = "<group>";
@@ -92,16 +92,27 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				0EE12B8EB9134483BB9A1BD0 /* RibbonApp.cpp */,
+				B5889BF0550F426E85038912 /* BSplineTestApp.cpp */,
 			);
 			name = Source;
+			sourceTree = "<group>";
+		};
+		102EFFFDDC514D489A36018D /* src */ = {
+			isa = PBXGroup;
+			children = (
+				2E062953F4E24332AD356029 /* BSplinePatch.cpp */,
+				902D83FE284541EA9987163E /* BSplineSurface.cpp */,
+			);
+			name = src;
 			sourceTree = "<group>";
 		};
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				3C57989225E550FD00CE9FBC /* CoreMedia.framework */,
-				3C57989125E550FB00CE9FBC /* AVFoundation.framework */,
+				3C5798A225E55C6400CE9FBC /* IOSurface.framework */,
+				3C5798A125E55C6200CE9FBC /* IOKit.framework */,
+				006D720219952D00008149E2 /* AVFoundation.framework */,
+				006D720319952D00008149E2 /* CoreMedia.framework */,
 				00B784AF0FF439BC000DE1D7 /* Accelerate.framework */,
 				00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */,
 				00B784B10FF439BC000DE1D7 /* AudioUnit.framework */,
@@ -126,12 +137,12 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D1107320486CEB800E47090 /* Ribbon.app */,
+				8D1107320486CEB800E47090 /* BSplineTest.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA /* Ribbon */ = {
+		29B97314FDCFA39411CA2CEA /* BSplineTest */ = {
 			isa = PBXGroup;
 			children = (
 				01B97315FEAEA392516A2CEA /* Blocks */,
@@ -141,14 +152,14 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
-			name = Ribbon;
+			name = BSplineTest;
 			sourceTree = "<group>";
 		};
 		29B97315FDCFA39411CA2CEA /* Headers */ = {
 			isa = PBXGroup;
 			children = (
-				B042F03B65C3408FB797609D /* Resources.h */,
-				9662766EE27C4D7684310A9F /* Ribbon_Prefix.pch */,
+				012C1F1EBA6F48E7BAC1CA5A /* Resources.h */,
+				4CE6C19C1F9F4FC0A9CE1F01 /* BSplineTest_Prefix.pch */,
 			);
 			name = Headers;
 			sourceTree = "<group>";
@@ -156,9 +167,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				3CA4675B1A808ACB0052AFF9 /* shaders */,
-				4E20FCF86A714235AE15D580 /* CinderApp.icns */,
-				CCBB289949D94204964E54E6 /* Info.plist */,
+				3C728B461A7DA01800532D27 /* shaders */,
+				ED5554067A044D9A871F681B /* CinderApp.icns */,
+				4F579E416B7542EE8F42B2C8 /* Info.plist */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -166,59 +177,49 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				3C57989525E5511C00CE9FBC /* IOSurface.framework */,
-				3C57989325E5511500CE9FBC /* IOKit.framework */,
-				3CE34D991A7C493700A54164 /* CoreMedia.framework */,
-				3CE34D971A7C48FC00A54164 /* AVFoundation.framework */,
+				3C57989F25E55C5C00CE9FBC /* IOSurface.framework */,
+				3C57989D25E55C5500CE9FBC /* IOKit.framework */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		3CA4675B1A808ACB0052AFF9 /* shaders */ = {
+		3C728B431A7D7B2700532D27 /* include */ = {
 			isa = PBXGroup;
 			children = (
-				3CA4675C1A808ACB0052AFF9 /* ribbon.frag */,
-				3CA4675D1A808ACB0052AFF9 /* ribbon.vert */,
+				3C728B441A7D7B2700532D27 /* BSplinePatch.h */,
+				3C728B451A7D7B2700532D27 /* BSplineSurface.h */,
+			);
+			name = include;
+			path = ../../../include;
+			sourceTree = "<group>";
+		};
+		3C728B461A7DA01800532D27 /* shaders */ = {
+			isa = PBXGroup;
+			children = (
+				3C728B471A7DA01800532D27 /* TexturedPhong.frag */,
+				3C728B481A7DA01800532D27 /* TexturedPhong.vert */,
 			);
 			name = shaders;
 			path = ../assets/shaders;
 			sourceTree = "<group>";
 		};
-		4165C90517AAC55800832470 /* src */ = {
+		41971743CE4141938676700A /* BSlinePatch */ = {
 			isa = PBXGroup;
 			children = (
-				4165C90717AAC57E00832470 /* BSplinePatch.cpp */,
-				4165C90A17AAC57E00832470 /* BSplineSurface.cpp */,
+				3C728B431A7D7B2700532D27 /* include */,
+				102EFFFDDC514D489A36018D /* src */,
 			);
-			name = src;
-			sourceTree = "<group>";
-		};
-		4165C90617AAC56400832470 /* BSplinePatch */ = {
-			isa = PBXGroup;
-			children = (
-				4165C91117AAC58B00832470 /* include */,
-				4165C90517AAC55800832470 /* src */,
-			);
-			name = BSplinePatch;
-			sourceTree = "<group>";
-		};
-		4165C91117AAC58B00832470 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				4165C91217AAC59500832470 /* BSplinePatch.h */,
-				4165C91517AAC59500832470 /* BSplineSurface.h */,
-			);
-			name = include;
+			name = BSlinePatch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D1107260486CEB800E47090 /* Ribbon */ = {
+		8D1107260486CEB800E47090 /* BSplineTest */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Ribbon" */;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "BSplineTest" */;
 			buildPhases = (
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
@@ -228,10 +229,10 @@
 			);
 			dependencies = (
 			);
-			name = Ribbon;
+			name = BSplineTest;
 			productInstallPath = "$(HOME)/Applications";
-			productName = Ribbon;
-			productReference = 8D1107320486CEB800E47090 /* Ribbon.app */;
+			productName = BSplineTest;
+			productReference = 8D1107320486CEB800E47090 /* BSplineTest.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -241,7 +242,7 @@
 			isa = PBXProject;
 			attributes = {
 			};
-			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Ribbon" */;
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "BSplineTest" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
@@ -251,11 +252,11 @@
 				French,
 				German,
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA /* Ribbon */;
+			mainGroup = 29B97314FDCFA39411CA2CEA /* BSplineTest */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D1107260486CEB800E47090 /* Ribbon */,
+				8D1107260486CEB800E47090 /* BSplineTest */,
 			);
 		};
 /* End PBXProject section */
@@ -265,7 +266,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3CAF5760B5E049F9A912CB15 /* CinderApp.icns in Resources */,
+				942924B3B689454D8BED0823 /* CinderApp.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,11 +277,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AEBCFF89618E4D0CB0CEBD49 /* RibbonApp.cpp in Sources */,
-				3CA4675F1A808ACB0052AFF9 /* ribbon.vert in Sources */,
-				3CA4675E1A808ACB0052AFF9 /* ribbon.frag in Sources */,
-				4165C90C17AAC57E00832470 /* BSplinePatch.cpp in Sources */,
-				3CE34D961A7C212500A54164 /* BSplineSurface.cpp in Sources */,
+				3C728B491A7DA01800532D27 /* TexturedPhong.frag in Sources */,
+				D6C05934615E43C0820F1A65 /* BSplineTestApp.cpp in Sources */,
+				BD0A4412DB97449BB911DA0F /* BSplinePatch.cpp in Sources */,
+				6374F0F1141F4510A7F3C15C /* BSplineSurface.cpp in Sources */,
+				3C728B4A1A7DA01800532D27 /* TexturedPhong.vert in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,8 +291,7 @@
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CINDER_PATH = ../../../../..;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
@@ -299,20 +299,16 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Ribbon_Prefix.pch;
+				GCC_PREFIX_HEADER = BSplineTest_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"\"$(CINDER_PATH)/boost\"",
-					"\"$(CINDER_PATH)/include\"",
-				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/macosx/Debug/libcinder.a\"";
-				PRODUCT_NAME = Ribbon;
+				PRODUCT_NAME = BSplineTest;
 				SYMROOT = ./build;
 				WRAPPER_EXTENSION = app;
 			};
@@ -321,8 +317,7 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CINDER_PATH = ../../../../..;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -331,16 +326,16 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Ribbon_Prefix.pch;
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					"\"$(CINDER_PATH)/boost\"",
-					"\"$(CINDER_PATH)/include\"",
+				GCC_PREFIX_HEADER = BSplineTest_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"NDEBUG=1",
+					"$(inherited)",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/macosx/Release/libcinder.a\"";
-				PRODUCT_NAME = Ribbon;
+				PRODUCT_NAME = BSplineTest;
 				STRIP_INSTALLED_PRODUCT = YES;
 				SYMROOT = ./build;
 				WRAPPER_EXTENSION = app;
@@ -351,9 +346,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CINDER_PATH = ../../../../..;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -363,7 +358,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../../../include";
 			};
 			name = Debug;
 		};
@@ -371,9 +366,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				ARCHS = "$(ARCHS_STANDARD)";
 				CINDER_PATH = ../../../../..;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -383,14 +378,14 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include ../../../include";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Ribbon" */ = {
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "BSplineTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4B08A954540054247B /* Debug */,
@@ -399,7 +394,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Ribbon" */ = {
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "BSplineTest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,

@@ -1,5 +1,5 @@
 /**
- * Math portions copyright:
+ * Tensor calculations in computePrincipalCurvatureInfo method are sourced from:
  * Geometric Tools, LLC
  * Copyright (c) 1998-2010
  * Distributed under the Boost Software License, Version 1.0.
@@ -7,258 +7,226 @@
  * http://www.geometrictools.com/License/Boost/LICENSE_1_0.txt
  */
 
-#include <cassert>
 #include <limits>
+
+#include "cinder/CinderAssert.h"
+#include "cinder/CinderGlm.h"
+#include "cinder/Log.h"
+#include "cinder/Matrix.h"
 
 #include "BSplinePatch.h"
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TODO:	Consider refactoring role of ParametricSurface
-// TODO:	Must FIX a bug with the setControlPoints method
-// TODO:	Test knot implementation
-//
-///////////////////////////////////////////////////////////////////////////
+#define ZERO_TOLERANCE 1e-06
 
 using namespace ci;
-using namespace cg;
 
-BSplinePatch::BSplinePatch() : ParametricSurface(0, 1, 0, 1, true)
+BSplinePatch::BSplinePatch()
+:	mDomainMin(0), mDomainMax(1)
 {
 	mLoop[0] = false;
 	mLoop[1] = false;
-	mReplicate[0] = 0;
-	mReplicate[1] = 0;
-	mNumCtrlPoints[0] = 0;
-	mNumCtrlPoints[1] = 0;
+	mReplicate = ivec2(0);
+	mNumCtrlPoints = ivec2(0);
 }
 
 BSplinePatch::~BSplinePatch()
 {
 }
 
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
-:	ParametricSurface(0, 1, 0, 1, true)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const ci::ivec2& size, const ci::ivec2& degree,
+						   const glm::bvec2& loop, bool uOpen, bool vOpen)
+:	mDomainMin(0), mDomainMax(1)
 {
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vOpen);
-}
-
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
-:	ParametricSurface(0, 1, 0, 1, true)
-{
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uOpen, vKnot);
-}
-
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
-:	ParametricSurface(0, 1, 0, 1, true)
-{
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vOpen);
-}
-
-BSplinePatch::BSplinePatch(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
-:	ParametricSurface(0, 1, 0, 1, true)
-{
-	this->create(ctrlPoints, uDegree, vDegree, uLoop, vLoop, uKnot, vKnot);
-}
-
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, bool vOpen)
-{
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
 	
-	assert(numUCtrlPoints >= 2);
-	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
-	assert(numVCtrlPoints >= 2);
-	assert(1 <= vDegree && vDegree <= numVCtrlPoints - 1);
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
-	mLoop[0] = uLoop;
-    mLoop[1] = vLoop;
+	mLoop[0] = loop.s;
+    mLoop[1] = loop.t;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? (uOpen ? 1 : uDegree) : 0);
-    mReplicate[1] = (vLoop ? (vOpen ? 1 : vDegree) : 0);
+    mNumCtrlPoints = size;
+    mReplicate.s = (loop.s ? (uOpen ? 1 : validDegree.s) : 0);
+    mReplicate.t = (loop.t ? (vOpen ? 1 : validDegree.t) : 0);
+	
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, vOpen);
+	
     createControls(ctrlPoints);
-	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uOpen);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, bool uOpen, float* vKnot)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const ci::ivec2& size, const ci::ivec2& degree,
+						   const glm::bvec2& loop, bool uOpen, const std::vector<float>& vKnots)
+:	mDomainMin(0), mDomainMax(1)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t - degree.t == vKnots.size(), "Knot vector must have (size - degree) elements." );
 	
-	assert(numUCtrlPoints >= 2);
-	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
-	assert(numVCtrlPoints >= 2);
-	assert(1 <= vDegree && vDegree <= numVCtrlPoints - 1);
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
-    mLoop[0] = uLoop;
-    mLoop[1] = vLoop;
+    mLoop[0] = loop.s;
+    mLoop[1] = loop.t;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? (uOpen ? 1 : uDegree) : 0);
-    mReplicate[1] = (vLoop ? 1 : 0);
+    mNumCtrlPoints = size;
+    mReplicate.s = (loop.s ? (uOpen ? 1 : validDegree.s) : 0);
+    mReplicate.t = (loop.t ? 1 : 0);
+	
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, uOpen);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, &vKnots[0]);
+	
     createControls(ctrlPoints);
-	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uOpen);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vKnot);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, bool vOpen)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const ci::ivec2& size, const ci::ivec2& degree,
+						   const glm::bvec2& loop, const std::vector<float>& uKnots, bool vOpen)
+:	mDomainMin(0), mDomainMax(1)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.s - degree.s == uKnots.size(), "Knot vector must have (size - degree) elements." );
 	
-	assert(numUCtrlPoints >= 2);
-	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
-	assert(numVCtrlPoints >= 2);
-	assert(1 <= vDegree && vDegree <= numVCtrlPoints - 1);
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
-    mLoop[0] = uLoop;
-    mLoop[1] = vLoop;
+    mLoop[0] = loop.s;
+    mLoop[1] = loop.t;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? 1 : 0);
-    mReplicate[1] = (vLoop ? (vOpen ? 1 : vDegree) : 0);
+    mNumCtrlPoints = size;
+    mReplicate.s = (loop.s ? 1 : 0);
+    mReplicate.t = (loop.t ? (vOpen ? 1 : validDegree.t) : 0);
+	
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, &uKnots[0]);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, vOpen);
+	
     createControls(ctrlPoints);
-	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uKnot);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vOpen);
 }
 
-void BSplinePatch::create(const ControlPointLatice& ctrlPoints,
-	const uint32_t uDegree, const uint32_t vDegree, bool uLoop, bool vLoop, float* uKnot, float* vKnot)
+BSplinePatch::BSplinePatch(const std::vector<vec3>& ctrlPoints,
+						   const ci::ivec2& size, const ci::ivec2& degree, const glm::bvec2& loop,
+						   const std::vector<float>& uKnots, const std::vector<float>& vKnots)
+:	mDomainMin(0), mDomainMax(1)
 {
-	size_t numUCtrlPoints = ctrlPoints.shape()[0];
-	size_t numVCtrlPoints = ctrlPoints.shape()[1];
+	CI_ASSERT_MSG( size.s >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.t >= 2, "Patch size must be greater than 1 on each both dimensions" );
+	CI_ASSERT_MSG( size.s - degree.s == uKnots.size(), "Knot vector must have (size - degree) elements." );
+	CI_ASSERT_MSG( size.t - degree.t == vKnots.size(), "Knot vector must have (size - degree) elements." );
 	
-	assert(numUCtrlPoints >= 2);
-	assert(1 <= uDegree && uDegree <= numUCtrlPoints - 1);
-	assert(numVCtrlPoints >= 2);
-	assert(1 <= vDegree && vDegree <= numVCtrlPoints - 1);
+	ivec2 validDegree = glm::clamp( degree, ivec2(1), ivec2(size -1) );
+	if (validDegree != degree)
+		CI_LOG_W( "Degree value of [" << degree.s << "," << degree.t << "] is invalid for size [" << size.s << ","
+				  << size.t << "]. Clamping degree to: [" << validDegree.s << "," << validDegree.t << "]" );
 	
-    mLoop[0] = uLoop;
-    mLoop[1] = vLoop;
+    mLoop[0] = loop.s;
+    mLoop[1] = loop.t;
 	
-    mNumCtrlPoints[0] = numUCtrlPoints;
-    mNumCtrlPoints[1] = numVCtrlPoints;
-    mReplicate[0] = (uLoop ? 1 : 0);
-    mReplicate[1] = (vLoop ? 1 : 0);
+    mNumCtrlPoints = size;
+    mReplicate.s = (loop.s ? 1 : 0);
+    mReplicate.t = (loop.t ? 1 : 0);
+	
+    mBasis[0].create(mNumCtrlPoints.s + mReplicate.s, validDegree.s, &uKnots[0]);
+    mBasis[1].create(mNumCtrlPoints.t + mReplicate.t, validDegree.t, &vKnots[0]);
+	
     createControls(ctrlPoints);
-	
-    mBasis[0].create(mNumCtrlPoints[0] + mReplicate[0], uDegree, uKnot);
-    mBasis[1].create(mNumCtrlPoints[1] + mReplicate[1], vDegree, vKnot);
 }
 
-void BSplinePatch::createControls(const ControlPointLatice& ctrlPoints)
+void BSplinePatch::createControls(const std::vector<vec3>& ctrlPoints)
 {
-    const uint32_t newNumUCtrlPoints = mNumCtrlPoints[0] + mReplicate[0];
-    const uint32_t newNumVCtrlPoints = mNumCtrlPoints[1] + mReplicate[1];
+	// NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID!
+	CI_ASSERT_MSG(ctrlPoints.size() == mNumCtrlPoints.s * mNumCtrlPoints.t, "The implementation does not currently support resizing the control point grid.");
 	
-//	const uint32_t uSize = ctrlPoints.shape()[0];
-//	const uint32_t vSize = ctrlPoints.shape()[1];
-//	if (uSize != mNumCtrlPoints[0] || vSize != mNumCtrlPoints[1]) {
-//		
-//	}
-	mControlPoints.resize(boost::extents[newNumUCtrlPoints][newNumVCtrlPoints]);
-	if (newNumUCtrlPoints == mNumCtrlPoints[0] && newNumVCtrlPoints == mNumCtrlPoints[1]) {
-		mControlPoints = ControlPointLatice(ctrlPoints);
+    const uint32_t ctrlPtsRow = mNumCtrlPoints.s + mReplicate.s;
+    const uint32_t ctrlPtsCol = mNumCtrlPoints.t + mReplicate.t;
+	
+	mControlPoints.clear();
+	mControlPoints.reserve( ctrlPtsRow * ctrlPtsCol );
+	if (ctrlPtsRow == mNumCtrlPoints.s && ctrlPtsCol == mNumCtrlPoints.t) {
+		mControlPoints = ctrlPoints;
 	}
 	else {
-		for (size_t u = 0; u < newNumUCtrlPoints; ++u) {
-			int uOld = u % mNumCtrlPoints[0];
-			for (size_t v = 0; v < newNumVCtrlPoints; ++v) {
-				int vOld = v % mNumCtrlPoints[1];
-				mControlPoints[u][v] = ctrlPoints[uOld][vOld];
+		mControlPoints.resize( ctrlPtsRow * ctrlPtsCol );
+		for (size_t u = 0; u < ctrlPtsRow; ++u) {
+			int uOld = u % mNumCtrlPoints.s;
+			for (size_t v = 0; v < ctrlPtsCol; ++v) {
+				int vOld = v % mNumCtrlPoints.t;
+				mControlPoints[u * ctrlPtsCol + v] = ctrlPoints[uOld * mNumCtrlPoints.t + vOld];
 			}
 		}
 	}
 }
 
-void BSplinePatch::setControlPoint(const uint32_t uIndex, const uint32_t vIndex, const Vec3f& point)
+void BSplinePatch::setControlPoint(const ci::ivec2& index, const vec3& point)
 {
-    if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
-        // Set the control point.
-		mControlPoints[uIndex][vIndex] = point;
+    if (index.s < mNumCtrlPoints.s && index.t < mNumCtrlPoints.t) {
+		mControlPoints[index.s * mNumCtrlPoints.t + index.t] = point;
 
         // Set the replicated control point.
-        bool doUReplicate = (uIndex < mReplicate[0]);
-        bool doVReplicate = (vIndex < mReplicate[1]);
+        bool uReplicate = (index.s < mReplicate.s);
+        bool vReplicate = (index.t < mReplicate.t);
         uint32_t iUExt = 0, iVExt = 0;
 
-        if (doUReplicate){
-            iUExt = mNumCtrlPoints[0] + uIndex;
-            mControlPoints[iUExt][vIndex] = point;
+        if (uReplicate){
+            iUExt = mNumCtrlPoints.s + index.s;
+            mControlPoints[iUExt * mNumCtrlPoints.t + index.t] = point;
         }
 		
-        if (doVReplicate) {
-            iVExt = mNumCtrlPoints[1] + vIndex;
-            mControlPoints[uIndex][iVExt] = point;
+        if (vReplicate) {
+            iVExt = mNumCtrlPoints.t + index.t;
+            mControlPoints[index.s * mNumCtrlPoints.t + iVExt] = point;
         }
 		
-        if (doUReplicate && doVReplicate) {
-            mControlPoints[iUExt][iVExt] = point;
+        if (uReplicate && vReplicate) {
+            mControlPoints[iUExt * mNumCtrlPoints.t + iVExt] = point;
         }
     }
 }
 
-Vec3f BSplinePatch::getControlPoint(const uint32_t uIndex, const uint32_t vIndex) const
+vec3 BSplinePatch::getControlPoint(const ci::ivec2& index) const
 {
-    if (uIndex < mNumCtrlPoints[0] && vIndex < mNumCtrlPoints[1]) {
-        return mControlPoints[uIndex][vIndex];
+    if (index.s < mNumCtrlPoints.s && index.t < mNumCtrlPoints.t) {
+        return mControlPoints[index.s * mNumCtrlPoints.t + index.t];
     }
 
-    return Vec3f::max();
+    return vec3( std::numeric_limits<float>::max() );
 }
 
-void BSplinePatch::setControlPointLatice(const ControlPointLatice& ctrlPoints)
+void BSplinePatch::updateControlPoints(const std::vector<vec3>& ctrlPoints, const ci::ivec2& size)
 {
-	assert(ctrlPoints.shape()[0] == mNumCtrlPoints[0]);
-	assert(ctrlPoints.shape()[1] == mNumCtrlPoints[1]);
+	// NOT CURRENTLY SUPPORTING A RESIZE OF CONTROL POINT GRID!
+	CI_ASSERT_MSG(size == mNumCtrlPoints, "The implementation does not currently support resizing the control point grid.");
 	
 	createControls(ctrlPoints);
 }
 
-ControlPointLatice BSplinePatch::getControlPointLatice() const
+void BSplinePatch::setKnot(const uint8_t dim, const uint32_t i, float knot)
 {
-	return mControlPoints;
-}
-
-void BSplinePatch::setKnot(const uint32_t dim, const uint32_t i, float knot)
-{
-	if (dim == 0) {
-		mBasis[0].setKnot(i, static_cast<float>(knot));
-	}
-	else if (dim == 1) {
-		mBasis[1].setKnot(i, static_cast<float>(knot));
+	if (mBasis.size() > dim) {
+		mBasis[dim].setKnot(i, static_cast<float>(knot));
 	}
 }
 
-float BSplinePatch::getKnot(const uint32_t dim, const uint32_t i) const
+float BSplinePatch::getKnot(const uint8_t dim, const uint32_t i) const
 {
-    if (dim == 0) {
-		return mBasis[0].getKnot(i);
-	}
-	else if (dim == 1) {
-		return mBasis[1].getKnot(i);
+    if (mBasis.size() > dim) {
+		mBasis[dim].getKnot(i);
 	}
 
     return std::numeric_limits<float>::max();
 }
 
-void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
-	Vec3f* derV, Vec3f* derUU, Vec3f* derUV, Vec3f* derVV) const
+void BSplinePatch::get(float u, float v, vec3* pos, vec3* derU,
+	vec3* derV, vec3* derUU, vec3* derUV, vec3* derVV) const
 {
     int iu, iumin, iumax;
     if (derUU) {
@@ -289,106 +257,234 @@ void BSplinePatch::get(float u, float v, Vec3f* pos, Vec3f* derU,
     }
 
     float tmp;
-
+    const uint32_t ctrlPtsRow = mNumCtrlPoints.t + mReplicate.t;
     if (pos) {
-        *pos = Vec3f::zero();
+        *pos = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD0(iv);
-                *pos += tmp * mControlPoints[iu][iv];
+                *pos += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 
     if (derU) {
-        *derU = Vec3f::zero();
+        *derU = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD0(iv);
-                *derU += tmp * mControlPoints[iu][iv];
+                *derU += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 
     if (derV) {
-        *derV = Vec3f::zero();
+        *derV = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD1(iv);
-                *derV += tmp * mControlPoints[iu][iv];
+                *derV += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 
     if (derUU) {
-        *derUU = Vec3f::zero();
+        *derUU = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD2(iu)*mBasis[1].getD0(iv);
-                *derUU += tmp * mControlPoints[iu][iv];
+                *derUU += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 
     if (derUV) {
-        *derUV = Vec3f::zero();
+        *derUV = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD1(iu)*mBasis[1].getD1(iv);
-                *derUV += tmp * mControlPoints[iu][iv];
+                *derUV += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 
     if (derVV) {
-        *derVV = Vec3f::zero();
+        *derVV = vec3(0);
         for (iu = iumin; iu <= iumax; ++iu) {
             for (iv = ivmin; iv <= ivmax; ++iv) {
                 tmp = mBasis[0].getD0(iu)*mBasis[1].getD2(iv);
-                *derVV += tmp * mControlPoints[iu][iv];
+                *derVV += tmp * mControlPoints[iu * ctrlPtsRow + iv];
             }
         }
     }
 }
 
-Vec3f BSplinePatch::P(float u, float v) const
+vec3 BSplinePatch::P(float u, float v) const
 {
-    Vec3f pos;
+    vec3 pos;
     get(u, v, &pos, 0, 0, 0, 0, 0);
     return pos;
 }
 
-Vec3f BSplinePatch::PU(float u, float v) const
+vec3 BSplinePatch::PU(float u, float v) const
 {
-    Vec3f derU;
+    vec3 derU;
     get(u, v, 0, &derU, 0, 0, 0, 0);
     return derU;
 }
 
-Vec3f BSplinePatch::PV(float u, float v) const
+vec3 BSplinePatch::PV(float u, float v) const
 {
-    Vec3f derV;
+    vec3 derV;
     get(u, v, 0, 0, &derV, 0, 0, 0);
     return derV;
 }
 
-Vec3f BSplinePatch::PUU(float u, float v) const
+vec3 BSplinePatch::PUU(float u, float v) const
 {
-    Vec3f derUU;
+    vec3 derUU;
     get(u, v, 0, 0, 0, &derUU, 0, 0);
     return derUU;
 }
 
-Vec3f BSplinePatch::PUV(float u, float v) const
+vec3 BSplinePatch::PUV(float u, float v) const
 {
-    Vec3f derUV;
+    vec3 derUV;
     get(u, v, 0, 0, 0, 0, &derUV, 0);
     return derUV;
 }
 
-Vec3f BSplinePatch::PVV(float u, float v) const
+vec3 BSplinePatch::PVV(float u, float v) const
 {
-    Vec3f derVV;
+    vec3 derVV;
     get(u, v, 0, 0, 0, 0, 0, &derVV);
     return derVV;
+}
+
+vec3 BSplinePatch::tangent(float u, float v) const
+{
+    return normalize( PU(u, v) );
+}
+
+vec3 BSplinePatch::bitangent(float u, float v) const
+{
+    vec3 tangent0 = PU(u, v);
+    vec3 tangent1 = PV(u, v);
+    normalize( tangent0 );
+    vec3 normal = normalize( cross(tangent0, tangent1) );
+    tangent1 = cross(normal, tangent0);
+    return tangent1;
+}
+
+vec3 BSplinePatch::position(float u, float v) const
+{
+	return P(u, v);
+}
+
+vec3 BSplinePatch::normal(float u, float v) const
+{
+    vec3 tangent0 = PU(u, v);
+    vec3 tangent1 = PV(u, v);
+    normalize( tangent0 );  // Include this to be consistent with GetFrame.
+    return normalize( cross(tangent0, tangent1) );
+}
+
+void BSplinePatch::getFrame(float u, float v, vec3& position, vec3& tangent0, vec3& tangent1, vec3& normal) const
+{
+    position = P(u, v);
+    tangent0 = PU(u, v);
+    tangent1 = PV(u, v);
+    normalize( tangent0 );  // T0
+    normalize( tangent1 );  // temporary T1 just to compute N
+    normal = normalize( cross(tangent0, tangent1) );  // N
+	
+    // The normalized first derivatives are not necessarily orthogonal.
+    // Recompute T1 so that {T0,T1,N} is an orthonormal set.
+    tangent1 = cross(normal, tangent0);
+}
+
+void BSplinePatch::computePrincipalCurvatureInfo(float u, float v, float& curve0, float& curve1, vec3& direction0, vec3& direction1)
+{
+	//======================================================================
+    // Tangents:          T0 = (x_u, y_u, z_u)
+	//                    T1 = (x_v, y_v, z_v)
+    // Normal:            N = cross(T0,T1) / length(cross(T0,T1))
+    // Metric tensor:     G = +-                      -+
+    //                        | dot(T0,T0)  dot(T0,T1) |
+    //                        | dot(T1,T0)  dot(T1,T1) |
+    //                        +-                      -+
+    //
+    // Curvature tensor:  B = +-                          -+
+    //                        | -dot(N,T0_u)  -dot(N,T0_v) |
+    //                        | -dot(N,T1_u)  -dot(N,T1_v) |
+    //                        +-                          -+
+    //
+    // Principal curvatures k are the generalized eigenvalues of:
+    //
+    //     Bw = kGw
+    //
+    // If k is a curvature and w=(a,b) is the corresponding solution to
+    // Bw = kGw, then the principal direction as a 3D vector is d = a*U+b*V.
+    //
+    // Let k1 and k2 be the principal curvatures. The mean curvature
+    // is (k1+k2)/2 and the Gaussian curvature is k1*k2.
+	//======================================================================
+	
+    // Compute derivatives.
+    vec3 derU = PU(u,v);
+    vec3 derV = PV(u,v);
+    vec3 derUU = PUU(u,v);
+    vec3 derUV = PUV(u,v);
+    vec3 derVV = PVV(u,v);
+	
+    // Compute the metric tensor.
+    mat2 metricTensor;
+    metricTensor[0][0] = dot(derU, derU);
+    metricTensor[0][1] = dot(derU, derV);
+    metricTensor[1][0] = metricTensor[0][1];
+    metricTensor[1][1] = dot(derV, derV);
+	
+    // Compute the curvature tensor.
+    vec3 normal = normalize( cross(derU, derV) );
+    mat2 curvatureTensor;
+    curvatureTensor[0][0] = -dot(normal, derUU);
+    curvatureTensor[0][1] = -dot(normal, derUV);
+    curvatureTensor[1][0] = curvatureTensor[0][1];
+    curvatureTensor[1][1] = -dot(normal, derVV);
+	
+    // Characteristic polynomial is 0 = det(B-kG) = c2*k^2+c1*k+c0.
+    float c0 = glm::determinant( curvatureTensor );
+    float c1 = 2.0f * curvatureTensor[0][1] * metricTensor[0][1] - curvatureTensor[0][0] * metricTensor[1][1] - curvatureTensor[1][1] * metricTensor[0][0];
+    float c2 = glm::determinant( metricTensor );
+	
+    // Principal curvatures are roots of characteristic polynomial.
+    float temp = math<float>::sqrt(math<float>::abs(c1*c1 - (4.0f * c0 * c2)));
+    float mult = 0.5f / c2;
+    curve0 = -mult * (c1+temp);
+    curve1 = mult * (-c1+temp);
+	
+    // Principal directions are solutions to (B-kG)w = 0,
+    // w1 = (b12-k1*g12,-(b11-k1*g11)) OR (b22-k1*g22,-(b12-k1*g12)).
+    float a0 = curvatureTensor[0][1] - curve0*metricTensor[0][1];
+    float a1 = curve0*metricTensor[0][0] - curvatureTensor[0][0];
+    float length = math<float>::sqrt(a0*a0 + a1*a1);
+    if (length >= ZERO_TOLERANCE) {
+        direction0 = a0*derU + a1*derV;
+    }
+    else {
+        a0 = curvatureTensor[1][1] - curve0*metricTensor[1][1];
+        a1 = curve0*metricTensor[0][1] - curvatureTensor[0][1];
+        length = math<float>::sqrt(a0*a0 + a1*a1);
+        if (length >= ZERO_TOLERANCE) {
+            direction0 = a0*derU + a1*derV;
+        }
+        else {
+            // Umbilic (surface is locally sphere, any direction principal).
+            direction0 = derU;
+        }
+    }
+    normalize( direction0 );
+	
+    // Second tangent is cross product of first tangent and normal.
+    direction1 = cross(direction0, normal);
 }

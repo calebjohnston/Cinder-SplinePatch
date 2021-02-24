@@ -1,89 +1,81 @@
 #include <time.h>
-#include <boost/bind.hpp>
 
-#include "cinder/app/AppNative.h"
+#include "cinder/app/App.h"
+#include "cinder/app/RendererGl.h"
 #include "cinder/params/Params.h"
 #include "cinder/gl/gl.h"
+#include "cinder/gl/Batch.h"
 #include "cinder/gl/GlslProg.h"
-#include "cinder/gl/Vbo.h"
+#include "cinder/gl/VboMesh.h"
+#include "cinder/gl/wrapper.h"
+#include "cinder/CinderGlm.h"
 #include "cinder/Color.h"
 #include "cinder/Rand.h"
+#include "cinder/GeomIo.h"
 #include "cinder/ImageIo.h"
+#include "cinder/Log.h"
 #include "cinder/Utilities.h"
 #include "cinder/System.h"
 #include "cinder/TriMesh.h"
 #include "cinder/Xml.h"
 #include "cinder/Camera.h"
 #include "cinder/Arcball.h"
-#include "cinder/MayaCamUI.h"
+#include "cinder/CameraUi.h"
 #include "cinder/AxisAlignedBox.h"
 
 #include "BSplinePatch.h"
-#include "SurfaceTriMesh.h"
-#include "SurfaceVboMesh.h"
+#include "BSplineSurface.h"
 
 using namespace ci;
 using namespace ci::app;
+using namespace glm;
 using namespace std;
-using namespace cg;
 
-namespace cinder { namespace gl {
-
-void enableBackFaceCulling()
+namespace cinder
 {
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	vec2 fromPolar( vec2 polar )
+	{
+		return vec2( math<float>::cos( polar.y ) *  polar.x , math<float>::sin( polar.y ) *  polar.x );
+	}
 }
 
-void enableFrontFaceCulling()
-{
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_FRONT);
-}
-
-void disableCulling()
-{
-	glDisable(GL_CULL_FACE);
-}
-	
-} }
-
-class RibbonApp : public AppNative {
+class RibbonApp : public App {
 public:
 	RibbonApp() {}
 	virtual ~RibbonApp() {}
 	
-	void prepareSettings( AppBasic::Settings *settings );
 	void setup();
 	void mouseMove( MouseEvent event );
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );
 	void mouseUp( MouseEvent event );
+	void keyDown( KeyEvent event );
 	void resize();
-    void keyDown( KeyEvent event );
 	void update();
 	void draw();
 	
 private:
 	void drawWorldFrame();
 	void updateSplinePatch();
+	void generateKnots( std::vector<float>& knots, const size_t count );
 	
 	CameraOrtho				mStaticCam;
 	CameraPersp				mCam;
-	MayaCamUI				mMayaCam;
-	Vec2i					mMousePos;
+	CameraUi				mMayaCam;
+	ivec2					mMousePos;
+	DisplayRef				mWindowDisplay;
 	
 	float					mFps;
-	bool						mDrawBezierPatch;
-	bool						mDrawWireframe;
-	bool						mDrawParams;
-	bool						mEnableBackfaceCulling;
-	bool						mEnableAdditiveBlending;
-	bool						mPause;
-	bool						mLoopU;
-	bool						mLoopV;
-	bool						mOpenU;
-	bool						mOpenV;
+	bool					mDrawBezierPatch;
+	bool					mDrawWireframe;
+	bool					mDrawParams;
+	bool					mEnableBackfaceCulling;
+	bool					mEnableAdditiveBlending;
+	bool					mPause;
+	bool					mLoopU;
+	bool					mLoopV;
+	bool					mOpenU;
+	bool					mOpenV;
 	float					mKnotU;
 	float					mKnotV;
 	float					mRadiusMin;
@@ -108,14 +100,13 @@ private:
 	float					mStaticCam_right;
 	float					mStaticCam_top;
 	float					mStaticCam_bottom;
-	Vec3f					mStaticCam_position;
-	Vec3f					mStaticCam_direction;
-	Vec3f					mLightPosition;
+	vec3					mStaticCam_position;
+	vec3					mStaticCam_direction;
+	vec3					mLightPosition;
 	Color					mAmbientColor;
 	Color					mDiffuseColor;
 	Color					mSpecularColor;
 	ColorA					mClearColor;
-	int32_t					mSurfaceMeshType;
 	int32_t					mLaticeWidth;
 	int32_t					mLaticeLength;
 	int32_t					mMeshWidth;
@@ -123,47 +114,34 @@ private:
 	int32_t					mSplineDegreeU;
 	int32_t					mSplineDegreeV;
 	int32_t					mCameraIndex;
-//	int32_t					mHullEdges;
 	params::InterfaceGlRef	mParams;
 
-	bool mIsReady;
-	cg::BSplinePatch bsplineRect;
-	cg::SurfaceTriMesh surfaceMesh;
-	cg::SurfaceVboMesh surfaceVbo;
-	cg::ControlPointLatice mCtrlPoints;
-	ci::gl::GlslProg mShader;
+	bool					mIsReady = {false};
+	BSplinePatch			mBSplineRect;
+	BSplineSurface			mSurfaceMesh;
+	std::vector<ci::vec3>	mCtrlPoints;
+	std::vector<float>		mCtrlKnotsV;
+	ci::gl::VboMeshRef		mMesh;
+	ci::gl::GlslProgRef		mShader;
+	ci::gl::BatchRef		mMeshBatch;
+	
+	float					mKnot0;
+	float					mKnot1;
+	float					mKnot2;
 };
-
-void RibbonApp::prepareSettings( Settings *settings )
-{
-	mIsReady = false;
-	
-	settings->setWindowSize(1600, 1080);
-	settings->setFrameRate(60);
-	settings->setTitle("RibbonApp");
-	
-	// seed random number generators
-	srand(time(NULL));
-	Rand::randSeed(time(NULL));
-}
 
 void RibbonApp::setup()
 {
-	// Add Mac resource paths...
-	fs::path path;
-	path = this->getAppPath() / ".." / ".." / ".." / ".." / "assets";
-	this->addAssetDirectory(path);
-	
-	this->getWindow()->getSignalResize().connect(std::bind(&RibbonApp::resize, this));
+	getWindow()->getSignalResize().connect(std::bind(&RibbonApp::resize, this));
+	getWindow()->getSignalDisplayChange().connect(std::bind(&RibbonApp::resize, this));
+	mWindowDisplay = getWindow()->getDisplay();
 	
 	mFps = 0.0;
-	mSurfaceMeshType = 1;
 	mEnableBackfaceCulling = false;
 	mEnableAdditiveBlending = true;
 	mDrawBezierPatch = false;
 	mDrawWireframe = false;
 	mPause = false;
-//	mHullEdges = 10;
 	mLaticeWidth = 8;
 	mLaticeLength = 20;
 	mDrawParams = true;
@@ -191,7 +169,7 @@ void RibbonApp::setup()
 	mTorsionXMin = -50.0f;
 	mTorsionXMax = 125.0f;
 	mTorsionXSpeed = 7.0f;
-	mTimeScale = 100.0f;
+	mTimeScale = 500.0f;
 	mAlpha = 0.6f;
 	mAmbientColor = Color(30.0/255.0, 80.0/255.0, 90.0/255.0);
 	mDiffuseColor = Color(56.0/255.0, 120.0/255.0, 110.0/255.0);
@@ -203,10 +181,14 @@ void RibbonApp::setup()
 	mStaticCam_right = 16.0f;
 	mStaticCam_top = 6.0f;
 	mStaticCam_bottom = -8.0f;
-	mLightPosition = Vec3f::one();
+	mLightPosition = vec3(1);
+	
+	mKnot0 = 0.13 * 100;
+	mKnot1 = 0.45 * 100;
+	mKnot2 = 0.66 * 100;
 	
 	try {
-		mShader = gl::GlslProg(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
+		mShader = gl::GlslProg::create(app::loadAsset("shaders/ribbon.vert"), app::loadAsset("shaders/ribbon.frag"));
 	}
 	catch ( gl::GlslProgCompileExc& exc ) {
 		console() << "ribbon shader compile error: " << exc.what();
@@ -216,30 +198,30 @@ void RibbonApp::setup()
 	}
 	
 	this->updateSplinePatch();
-	bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
-	surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-	surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
+	this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
+	mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+	mSurfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	TriMeshRef surface = TriMesh::create( mSurfaceMesh );
+	mMesh = gl::VboMesh::create( *surface.get() );
+	mMeshBatch = gl::Batch::create( mMesh, mShader );
 	
-	Vec3f center = surfaceMesh.trimesh().calcBoundingBox().getCenter();
-	mCam.setEyePoint(Vec3f(center.x, 0.0f, 20.0f));
-	mCam.setCenterOfInterestPoint(center);
+	vec3 center = surface->calcBoundingBox().getCenter();
+	mCam.setEyePoint(vec3(center.x, 0.0f, 20.0f));
+	mCam.lookAt(center);
 	mCam.setPerspective(60.0f, getWindowAspectRatio(), 1.0f, 1000.0f);
-	mMayaCam.setCurrentCam(mCam);
-	mStaticCam_position = Vec3f(center.x, 0.0f, 20.0f);
-	mStaticCam_direction = Vec3f(0,0,-1.0f);
+	mMayaCam.setCamera(&mCam);
+	mStaticCam_position = vec3(center.x, 0.0f, 20.0f);
+	mStaticCam_direction = vec3(0,0,-1.0f);
 	
 	mStaticCam.setEyePoint(mStaticCam_position);
 	mStaticCam.setOrtho(mStaticCam_left, mStaticCam_right, mStaticCam_bottom, mStaticCam_top, 1.0, 1000.0f);
-	mStaticCam.setWorldUp(Vec3f(0,1,0));
+	mStaticCam.setWorldUp(vec3(0,1,0));
 	mStaticCam.setViewDirection(mStaticCam_direction);
 	
-	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", Vec2i(350, 600));
+	mParams = params::InterfaceGl::create(this->getWindow(), "Parameters", ivec2(350, 600));
 //	mParams.setOptions("", "");
 	mParams->addParam("fps: ", &mFps);
-	vector<string> mesh_types;
-	mesh_types.push_back("SurfaceTriMesh");
-	mesh_types.push_back("SurfaceVboMesh");
-	mParams->addParam("surface type", mesh_types, &mSurfaceMeshType);
+	
 	vector<string> cameras;
 	cameras.push_back("Maya cam");
 	cameras.push_back("Static cam");
@@ -249,9 +231,11 @@ void RibbonApp::setup()
 	mParams->addParam("enable backface culling", &mEnableBackfaceCulling);
 	mParams->addParam("use additive blending", &mEnableAdditiveBlending);
 	mParams->addParam("pause", &mPause);
-	//	mParams->addParam("total hull edges", &mHullEdges);
-	mParams->addParam("latice width", &mLaticeWidth);
-	mParams->addParam("latice length", &mLaticeLength);
+	mParams->addParam("knot 0", &mKnot0);
+	mParams->addParam("knot 1", &mKnot1);
+	mParams->addParam("knot 2", &mKnot2);
+	mParams->addParam("patch width", &mLaticeWidth);
+	mParams->addParam("patch length", &mLaticeLength);
 	mParams->addParam("mesh width", &mMeshWidth);
 	mParams->addParam("mesh length", &mMeshLength);
 	mParams->addParam("spline degree U", &mSplineDegreeU);
@@ -302,13 +286,15 @@ void RibbonApp::mouseMove( MouseEvent event )
 	
 	float x = static_cast<float>(mMousePos.x) / static_cast<float>(getWindowSize().x);
 	float y = static_cast<float>(mMousePos.y) / static_cast<float>(getWindowSize().y);
-	mLightPosition = Vec3f(0, y * 4.0f, 3.0 - x * 6.0f);
+	mLightPosition = vec3(0, y * 4.0f, 3.0 - x * 6.0f);
 }
 
 void RibbonApp::mouseDrag( MouseEvent event )
 {
-	mMousePos = event.getPos();
-	mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
+	if (0 == mCameraIndex) {
+		mMousePos = event.getPos();
+		mMayaCam.mouseDrag( event.getPos(), event.isLeftDown(), event.isMiddleDown(), event.isRightDown() );
+	}
 }
 
 void RibbonApp::mouseUp( MouseEvent event )
@@ -317,32 +303,17 @@ void RibbonApp::mouseUp( MouseEvent event )
 
 void RibbonApp::mouseDown( MouseEvent event )
 {
-	mMayaCam.mouseDown( event.getPos() );
-}
-
-void RibbonApp::resize()
-{
-//	mCam.setPerspective( 60, getWindowAspectRatio(), 1, 1000 );
-//	gl::setMatrices( mCam );
-//	CameraPersp cam = mMayaCam.getCamera();
-	mCam.setAspectRatio( getWindowAspectRatio() );
-	mMayaCam.setCurrentCam(mCam);
+	if (0 == mCameraIndex) {
+		mMayaCam.mouseDown( event.getPos() );
+	}
 }
 
 void RibbonApp::keyDown( KeyEvent event )
 {
-	if (event.isMetaDown() && event.getCode() == KeyEvent::KEY_w) this->quit();	// close window behavior
+	if (event.isMetaDown() && event.getCode() == KeyEvent::KEY_w)
+		this->quit();	// close window behavior
 	
-	Vec3f p;
 	switch(event.getCode()){
-		case KeyEvent::KEY_a:
-//			rotate_b = false;
-//			console()  << "rotation_y = " << rotation_y << std::endl;
-			break;
-		case KeyEvent::KEY_s:
-//			rotate_b = true;
-			break;
-			
 		case KeyEvent::KEY_p:
 			mDrawParams = !mDrawParams;
 			break;
@@ -358,68 +329,68 @@ void RibbonApp::keyDown( KeyEvent event )
 			break;
 			
 		case KeyEvent::KEY_c:
-			mCam.setCenterOfInterestPoint(surfaceMesh.trimesh().calcBoundingBox().getCenter());
-			mMayaCam.setCurrentCam(mCam);
+			{
+				AxisAlignedBox aabb;
+				mSurfaceMesh >> geom::Bounds(&aabb);
+				vec3 center = aabb.getCenter();
+				
+				mCam.setPerspective( 60, getWindowAspectRatio(), 1, 1000 );
+				mCam.setAspectRatio( getWindowAspectRatio() );
+				mCam.setEyePoint(vec3(center.x, 0.0f, 20.0f));
+				mCam.lookAt(center);
+				mMayaCam.setCamera(&mCam);
+			}
 			break;
-
-//		case KeyEvent::KEY_UP:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.y += 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_DOWN:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.y -= 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_LEFT:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.x -= 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
-//			
-//		case KeyEvent::KEY_RIGHT:
-//			p = mCam.getCenterOfInterestPoint();
-//			p.x += 0.1f;
-//			mCam.setCenterOfInterestPoint(p);
-//			mMayaCam.setCurrentCam(mCam);
-//			break;
 		
 		default:
 			break;
 	}
 }
 
+void RibbonApp::resize()
+{
+	gl::setMatricesWindow( getWindowSize() );
+	
+	mCam.setPerspective( 60, getWindowAspectRatio(), 1, 1000 );
+	mCam.setAspectRatio( getWindowAspectRatio() );
+	mMayaCam.setCamera(&mCam);
+	
+	mStaticCam.setEyePoint(mStaticCam_position);
+	mStaticCam.setViewDirection(mStaticCam_direction);
+}
+
 void RibbonApp::update()
 {
 	if (!mIsReady) return;
 	
+	if (getWindow()->getDisplay() != mWindowDisplay) {
+		mWindowDisplay = getWindow()->getDisplay();
+		// HACK: this is required since MacOS Catalina due to a change in how OSX reports the display content scaling, sadly
+		ivec2 size = getWindowSize();
+		setWindowSize(size.x, size.y-1);
+		setWindowSize(size.x, size.y);
+	}
+
 	mFps = static_cast<int32_t>(math<float>::floor(app::App::get()->getAverageFps()));
 	
 	if (!mPause) {
 		this->updateSplinePatch();
-		
-		bsplineRect.create(mCtrlPoints, mSplineDegreeU, mSplineDegreeV, mLoopU, mLoopV, mOpenU, mOpenV);
-//		bsplineRect.setControlPointLatice(mCtrlPoints);	// does not work yet :(
-		if (mSurfaceMeshType == 0 && surfaceMesh) {
-			surfaceMesh = SurfaceTriMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-			surfaceMesh.updateSurface(bsplineRect);
-		}
-		else if (mSurfaceMeshType == 1 && surfaceVbo) {
-			surfaceVbo = SurfaceVboMesh(bsplineRect, mMeshWidth, mMeshLength, Vec2f(0,0), Vec2f(1,1));
-			surfaceVbo.updateSurface(bsplineRect);
-		}
+		this->generateKnots( mCtrlKnotsV, mLaticeLength - mSplineDegreeV );
 	}
 	
-	if (mCameraIndex == 1) {
+	//mBSplineRect = BSplinePatch( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mOpenV );
+	mBSplineRect.updateControlPoints( mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength) );
+	//mBSplineRect = BSplinePatch(mCtrlPoints, ivec2(mLaticeWidth, mLaticeLength), ivec2(mSplineDegreeU, mSplineDegreeV), glm::bvec2(mLoopU, mLoopV), mOpenU, mCtrlKnotsV);
+	mSurfaceMesh = BSplineSurface( const_cast<BSplinePatch*>(&mBSplineRect), ivec2(mMeshWidth, mMeshLength) ).texCoords( vec2(0,0), vec2(1,1) );
+	TriMeshRef surface = TriMesh::create( mSurfaceMesh );
+	//TriMeshRef surface = TriMesh::create( geom::VertexNormalLines( surfaceMesh, 1.0 ) );
+	mMesh = gl::VboMesh::create( *surface.get() );
+	mMeshBatch = gl::Batch::create( mMesh, mShader );
+	
+	if (1 == mCameraIndex) {
 		mStaticCam.setEyePoint(mStaticCam_position);
 		mStaticCam.setOrtho(mStaticCam_left, mStaticCam_right, mStaticCam_bottom, mStaticCam_top, 1.0, 1000.0f);
-		mStaticCam.setWorldUp(Vec3f(0,1,0));
+		mStaticCam.setWorldUp(vec3(0,1,0));
 		mStaticCam.setViewDirection(mStaticCam_direction);
 	}
 }
@@ -429,7 +400,6 @@ void RibbonApp::draw()
 	if (!mIsReady) return;
 	
 	gl::clear(mClearColor, true);
-//	gl::enableDepthTest();
 	if (mEnableAdditiveBlending) {
 		gl::enableAdditiveBlending();
 	}
@@ -437,72 +407,64 @@ void RibbonApp::draw()
 		gl::enableAlphaBlending();
 	}
 	gl::pushMatrices();
-	if (mCameraIndex == 0) {
+	if (0 == mCameraIndex) {
 		gl::setMatrices(mMayaCam.getCamera());
 	}
-	else if (mCameraIndex == 1) {
+	else if (1 == mCameraIndex) {
 		gl::setMatrices(mStaticCam);
 	}
 	
-	if (mEnableBackfaceCulling) gl::enableBackFaceCulling();
+	if (mEnableBackfaceCulling) {
+		gl::enableFaceCulling();
+		gl::cullFace(GL_BACK);
+	}
 	
-//	drawWorldFrame();
-	
-	if (mDrawWireframe) gl::enableWireframe();
-	else if (mShader) {
+	if (mDrawWireframe) {
+		gl::enableWireframe();
 		gl::color(1,1,1,1);
-		mShader.bind();
-		mShader.uniform("lightPosition", Vec4f(mLightPosition,1.0f));
-		mShader.uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
-		mShader.uniform("alpha", mAlpha);
-		mShader.uniform("ambientColor", mAmbientColor);
-		mShader.uniform("diffuseColor", mDiffuseColor);
-		mShader.uniform("specularColor", mSpecularColor);
+		gl::draw( mMesh );
+		gl::disableWireframe();
+	}
+	else if (mShader) {
+		mShader->uniform("lightPosition", vec4(mLightPosition,1.0f));
+		mShader->uniform("eyePosition", mMayaCam.getCamera().getEyePoint());
+		mShader->uniform("alpha", mAlpha);
+		mShader->uniform("ambientColor", mAmbientColor);
+		mShader->uniform("diffuseColor", mDiffuseColor);
+		mShader->uniform("specularColor", mSpecularColor);
+		mMeshBatch->draw();
 	}
 	
-	if (mSurfaceMeshType == 0 && surfaceMesh) {
-		gl::draw(surfaceMesh);
-	}
-	else if (mSurfaceMeshType == 1 && surfaceVbo) {
-		gl::draw(surfaceVbo);
-	}
-	
-	gl::disableWireframe();
-	
-	gl::disableCulling();
-	
-	if (!mDrawWireframe && mShader) {
-		mShader.unbind();
-	}
+	if (mEnableBackfaceCulling)
+		gl::enableFaceCulling( false );
 	
 	if (mDrawBezierPatch) {
-		glPointSize(5.0f);
+		gl::pointSize(5.0f);
 		gl::begin(GL_POINTS);
-		gl::color(1,1,1,1);
-		ControlPointLatice::index i,j;
+		gl::color(0,1,1,1);
+		uint32_t i,j;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
-				gl::vertex(mCtrlPoints[i][j]);
+				gl::vertex(mCtrlPoints[i * mLaticeLength + j]);
 			}
 		}
 		gl::end();
 	}
 	gl::popMatrices();
 
-	if (mDrawParams) {
+	if (mDrawParams)
 		mParams->draw();
-	}
 }
 
 void RibbonApp::drawWorldFrame()
 {
 	float s = 5.0f;
 	gl::color(1,0,0,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(s,0,0));
+	gl::drawLine(vec3(0), vec3(s,0,0));
 	gl::color(0,1,0,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(0,s,0));
+	gl::drawLine(vec3(0), vec3(0,s,0));
 	gl::color(0,0,1,1);
-	gl::drawLine(Vec3f::zero(), Vec3f(0,0,s));
+	gl::drawLine(vec3(0), vec3(0,0,s));
 }
 
 void RibbonApp::updateSplinePatch()
@@ -525,20 +487,16 @@ void RibbonApp::updateSplinePatch()
 	float torsion_speed = mTorsionXSpeed * 0.01f;
 	float radius_min = mRadiusMin * 0.01f;
 	float radius_max = mRadiusMax * 0.01f;
-	/*
-	float offsets[24] = {0.9, 1.15, 1.75, 2.1, 2.25, 3.0, 2.9, 3.15, 5.05, 0.5, 0.555, 0.425,
-						 4.5, 4.175, 3.8, 3.67, 3.6, 2.45, 2.415, 2.8, 2.375, 2.35, 1.95, 2.179};
-	 */
+	
 	float weights[24] = {0.1, 0.115, 0.175, 0.33, 0.25, 0.275, 0.33, 0.39, 0.43, 0.5, 0.54, 0.42,
 						0.5, 0.575, 0.6, 0.67, 0.6, 0.45, 0.415, 0.4, 0.375, 0.35, 0.15, 0.179};
 	
+	size_t meshSize = mLaticeWidth * mLaticeLength;
+	if (mCtrlPoints.size() != meshSize)
+		mCtrlPoints.resize( meshSize );
 	
-	// mLaticeWidth =>	x axis
-	// mLaticeLength =>	z axis
-	// TODO: Modify the weights above to smooth it out
 	if (mLoopV) {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		uint32_t i,j;
 		float x, y, z;
 		float r_x, radius, theta, t_x;
 		float two_pi = static_cast<float>(2.0 * M_PI);
@@ -555,37 +513,65 @@ void RibbonApp::updateSplinePatch()
 				float aX = (0.75f * ampX) + (3.5f * weights[j]);
 				float alpha = theta <= one_pi? (theta/one_pi): (two_pi - theta) / one_pi;
 				radius = lerp(radius_min, radius_max, s) + lerp(1.0f, hull_amp + math<float>::sin(j * freqY), alpha);
-				Vec2f hull_pt = fromPolar(Vec2f(radius, theta));
+				vec2 hull_pt = ci::fromPolar( vec2(radius, theta) );
 				x = i * scale_x;
 				y = hull_pt.y * scale_y;
 				y += math<float>::cos((weights[j]) + i + t * freqX) * aX;
 				y += math<float>::sin((t * freqZ) + (i * 0.75f));
 				z = hull_pt.x * scale_z;
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				mCtrlPoints[i * mLaticeLength + j] = vec3(x,y,z);
 				
 				theta += t_x;
 			}
 		}
 	}
 	else {
-		mCtrlPoints.resize(boost::extents[mLaticeWidth][mLaticeLength]);
-		ControlPointLatice::index i,j;
+		uint32_t i,j;
 		float fX,fY,aX, x,y,z;
 		for(i = 0; i != mLaticeWidth; ++i) {
 			for(j = 0; j != mLaticeLength; ++j) {
 				fX = freqX;
 				fY = j * t * math<float>::sin(0.15f * weights[j]);
-//				float fX = freqX + (0.01f * static_cast<float>(j));
-				aX = (0.75f * ampX) + (3.5f * weights[j]);// + (0.01f * static_cast<float>(j));
+				aX = (0.75f * ampX) + (3.5f * weights[j]);
 				x = i * scale_x;
 				y = scale_y * math<float>::cos((1.0f * weights[j]) + i + t * fX) * aX;
 				z = (j * scale_z) * (1.0f + math<float>::cos(i + t * freqY) * ampY);		//! position point-z
-				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;		//! add torsion-x to y
-				mCtrlPoints[i][j] = Vec3f(x,y,z);
+				y += (1.0 * weights[j]) + math<float>::sin(fY * freqZ) * ampZ;				//! add torsion-x to y
+				mCtrlPoints[i * mLaticeLength + j] = vec3(x,y,z);
 			}
 		}
 	}
 }
 
-CINDER_APP_NATIVE( RibbonApp, RendererGl )
+void RibbonApp::generateKnots( std::vector<float>& knots, const size_t count )
+{
+	knots.clear();
+	knots.resize(count);
+	float tmp = 0.0f;
+	float delta = 1.1f / static_cast<float>(count);
+	for (uint32_t i = 0; i < knots.size(); i++) {
+		knots[i] = tmp + (i * delta);
+		if (7 == i) {
+			knots[i] = mKnot2 / 100;
+		}
+		else if (5 == i) {
+			knots[i] = mKnot1 / 100;
+		}
+		else if (3 == i) {
+			knots[i] = mKnot0 / 100;
+		}
+	}
+}
 
+CINDER_APP( RibbonApp, RendererGl(),
+[&]( App::Settings *settings ) {
+	settings->setDisplay(Display::getMainDisplay());
+	settings->setHighDensityDisplayEnabled( false );
+	settings->setWindowSize(1600, 1080);
+	settings->setFrameRate(60);
+	settings->setTitle("RibbonApp");
+	
+	// seed random number generators
+	srand(time(NULL));
+	Rand::randSeed(time(NULL));
+})

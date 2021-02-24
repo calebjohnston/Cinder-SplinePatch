@@ -2,6 +2,8 @@ build
 xcuserdata
 project.xcworkspace
 .DS_Store
+.vs
+*.suo
 Release
 Debug
 Ribbon.sdf
